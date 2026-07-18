@@ -1,0 +1,1213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Moofresh Hanoon — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream: #F5EFE1;
+    --cream-card: #FDFBF5;
+    --bottle-green: #1E3A2B;
+    --bottle-green-light: #2E5540;
+    --brass: #B8863B;
+    --brass-light: #D7AD68;
+    --rust: #A8452F;
+    --rust-bg: #F7E4DE;
+    --sage: #5C7A4E;
+    --sage-bg: #E4EEDD;
+    --amber: #B8863B;
+    --amber-bg: #F5E7CC;
+    --ink: #26221C;
+    --ink-soft: #6B6459;
+    --line: #E6DDC9;
+  }
+
+  *{box-sizing:border-box; margin:0; padding:0;}
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.01ms !important; transition-duration:0.01ms !important;}
+  }
+
+  body{
+    background: linear-gradient(180deg, #EDE6D4 0%, #E3DBC6 100%);
+    font-family:'Work Sans', sans-serif;
+    color: var(--ink);
+    min-height:100vh;
+    padding-bottom: 90px;
+  }
+
+  .app-shell{
+    width:100%;
+    max-width: 560px;
+    margin: 0 auto;
+    background: var(--cream);
+    min-height:100vh;
+    position:relative;
+    box-shadow: 0 0 40px rgba(20,30,20,0.06);
+  }
+
+  @media (min-width: 720px){
+    body{ padding: 28px 12px 90px; }
+    .app-shell{
+      min-height:auto;
+      border-radius: 24px;
+      box-shadow: 0 30px 60px -25px rgba(20,30,20,0.35), 0 0 0 1px rgba(0,0,0,0.04);
+      overflow:hidden;
+    }
+  }
+
+  .screen{
+    padding-bottom: 30px;
+  }
+
+  /* ---------- HEADER ---------- */
+  .header{
+    padding: 6px 22px 22px;
+  }
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color: var(--brass);
+    font-weight:600;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .eyebrow::before{
+    content:'';
+    width:6px;height:6px;
+    background: var(--brass);
+    border-radius:50%;
+    display:inline-block;
+  }
+  h1.title{
+    font-family:'Fraunces', serif;
+    font-size:30px;
+    font-weight:600;
+    color: var(--bottle-green);
+    margin-top:6px;
+    letter-spacing:-0.01em;
+  }
+  .subtitle{
+    color: var(--ink-soft);
+    font-size:13px;
+    margin-top:4px;
+  }
+
+  /* ---------- MILK GAUGE (signature element) ---------- */
+  .gauge-card{
+    margin: 18px 22px 4px;
+    background: var(--bottle-green);
+    border-radius:24px;
+    padding: 22px 20px;
+    display:flex;
+    align-items:center;
+    gap:18px;
+    position:relative;
+    overflow:hidden;
+    box-shadow: 0 16px 30px -12px rgba(30,58,43,0.55);
+  }
+  .gauge-card::after{
+    content:'';
+    position:absolute; right:-40px; top:-40px;
+    width:140px; height:140px;
+    background: radial-gradient(circle, rgba(216,173,104,0.25), transparent 70%);
+  }
+  .bottle-wrap{ flex-shrink:0; }
+  .gauge-text{ flex:1; }
+  .gauge-label{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10.5px;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color: rgba(255,255,255,0.65);
+    margin-bottom:6px;
+  }
+  .gauge-value{
+    font-family:'Fraunces', serif;
+    font-size:34px;
+    color:#fff;
+    font-weight:600;
+    line-height:1;
+  }
+  .gauge-sub{
+    font-size:12px;
+    color: rgba(255,255,255,0.75);
+    margin-top:6px;
+  }
+  .gauge-sub b{ color: var(--brass-light); font-weight:600; }
+
+  #fillRect{
+    transition: height 1.4s cubic-bezier(.22,1,.36,1), y 1.4s cubic-bezier(.22,1,.36,1);
+  }
+
+  /* ---------- KPI GRID ---------- */
+  .kpi-grid{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:12px;
+    margin: 18px 22px;
+  }
+  .kpi-card{
+    background: var(--cream-card);
+    border: 1px solid var(--line);
+    border-radius:18px;
+    padding:16px 16px 14px;
+  }
+  .kpi-label{
+    font-size:11.5px;
+    color: var(--ink-soft);
+    font-weight:500;
+    margin-bottom:8px;
+  }
+  .kpi-value{
+    font-family:'Fraunces', serif;
+    font-size:23px;
+    font-weight:600;
+    color: var(--bottle-green);
+    letter-spacing:-0.01em;
+  }
+  .kpi-value.rust{ color: var(--rust); }
+  .kpi-unit{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color: var(--ink-soft);
+    margin-top:2px;
+  }
+
+  /* ---------- SECTION HEADERS ---------- */
+  .section-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    margin: 26px 22px 12px;
+  }
+  .section-title{
+    font-family:'Fraunces', serif;
+    font-size:18px;
+    font-weight:600;
+    color: var(--ink);
+  }
+  .section-count{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color: var(--ink-soft);
+  }
+
+  /* ---------- BUYER LIST ---------- */
+  .buyer-list{ margin:0 22px; display:flex; flex-direction:column; gap:10px; }
+  .buyer-card{
+    background: var(--cream-card);
+    border:1px solid var(--line);
+    border-radius:16px;
+    padding:14px 16px;
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  .buyer-avatar{
+    width:40px; height:40px;
+    border-radius:12px;
+    background: var(--amber-bg);
+    color: var(--brass);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:15px;
+    flex-shrink:0;
+  }
+  .buyer-info{ flex:1; min-width:0; }
+  .buyer-name{ font-weight:600; font-size:14px; color:var(--ink); }
+  .buyer-meta{ font-size:11.5px; color: var(--ink-soft); margin-top:2px; }
+  .buyer-amounts{ text-align:right; flex-shrink:0; }
+  .buyer-total{
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:600;
+    font-size:13px;
+    color: var(--ink);
+  }
+  .status-pill{
+    display:inline-block;
+    margin-top:5px;
+    font-size:10px;
+    font-weight:600;
+    letter-spacing:0.03em;
+    padding:3px 9px;
+    border-radius:20px;
+  }
+  .status-paid{ background: var(--sage-bg); color: var(--sage); }
+  .status-partial{ background: var(--amber-bg); color: var(--brass); }
+  .status-unpaid{ background: var(--rust-bg); color: var(--rust); }
+
+  /* ---------- SALES LOG ---------- */
+  .sale-row{
+    margin:0 22px 10px;
+    background: var(--cream-card);
+    border:1px solid var(--line);
+    border-left:3px solid var(--brass);
+    border-radius:14px;
+    padding:12px 14px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .sale-row.paid{ border-left-color: var(--sage); }
+  .sale-row.unpaid{ border-left-color: var(--rust); }
+  .sale-id{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10.5px;
+    color: var(--ink-soft);
+  }
+  .sale-buyer{ font-weight:600; font-size:13.5px; margin-top:2px; }
+  .sale-detail{ font-size:11.5px; color: var(--ink-soft); margin-top:2px; }
+  .sale-amount{ text-align:right; }
+  .sale-total{
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:600;
+    font-size:14px;
+    color: var(--bottle-green);
+  }
+
+  .footnote{
+    margin: 22px 22px 8px;
+    font-size:11px;
+    color: var(--ink-soft);
+    text-align:center;
+    line-height:1.5;
+  }
+
+  /* ---------- TAB BAR ---------- */
+  .tabbar{
+    position:fixed;
+    bottom:0; left:0; right:0;
+    max-width: 560px;
+    margin: 0 auto;
+    background: rgba(253,251,245,0.94);
+    backdrop-filter: blur(10px);
+    border-top:1px solid var(--line);
+    display:flex;
+    padding: 10px 10px 16px;
+    gap:4px;
+    z-index:15;
+  }
+  .tab{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:4px;
+    padding:6px 0 2px;
+    border-radius:14px;
+    cursor:pointer;
+    color: var(--ink-soft);
+    transition: color .2s ease, background .2s ease;
+    background:none;
+    border:none;
+    font-family:'Work Sans', sans-serif;
+  }
+  .tab svg{ width:20px; height:20px; }
+  .tab span{ font-size:10px; font-weight:600; }
+  .tab.active{ color: var(--bottle-green); background: var(--sage-bg); }
+
+  .view{ display:none; }
+  .view.active{ display:block; animation: fadeUp .45s ease both; }
+  @keyframes fadeUp{
+    from{ opacity:0; transform:translateY(8px); }
+    to{ opacity:1; transform:translateY(0); }
+  }
+
+  .empty-state{
+    margin: 40px 22px;
+    text-align:center;
+    padding: 30px 20px;
+    border:1.5px dashed var(--line);
+    border-radius:18px;
+    color: var(--ink-soft);
+    font-size:13px;
+  }
+
+  /* ---------- HEADER REFRESH ---------- */
+  .eyebrow-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .refresh-btn{
+    width:30px; height:30px;
+    border-radius:9px;
+    border:1px solid var(--line);
+    background: var(--cream-card);
+    color: var(--bottle-green);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+  }
+  .refresh-btn svg{ width:15px; height:15px; }
+  .refresh-btn.spinning svg{ animation: spin .9s linear infinite; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  /* ---------- CONNECT SCREEN ---------- */
+  .connect-screen{
+    position:absolute;
+    inset:0;
+    z-index:30;
+    background: var(--cream);
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    padding: 32px 26px;
+  }
+  .connect-screen.hidden{ display:none; }
+  .connect-icon{
+    width:56px; height:56px;
+    border-radius:16px;
+    background: var(--bottle-green);
+    display:flex; align-items:center; justify-content:center;
+    margin-bottom:18px;
+  }
+  .connect-icon svg{ width:26px; height:26px; color:#fff; }
+  .connect-title{
+    font-family:'Fraunces', serif;
+    font-size:23px;
+    font-weight:600;
+    color: var(--bottle-green);
+    margin-bottom:8px;
+  }
+  .connect-copy{
+    font-size:13px;
+    color: var(--ink-soft);
+    line-height:1.55;
+    margin-bottom:20px;
+  }
+  .connect-input{
+    width:100%;
+    padding:13px 14px;
+    border-radius:12px;
+    border:1.5px solid var(--line);
+    background: var(--cream-card);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11.5px;
+    color: var(--ink);
+    margin-bottom:12px;
+    outline:none;
+  }
+  .connect-input:focus{ border-color: var(--brass); }
+  .connect-btn{
+    width:100%;
+    padding:13px;
+    border-radius:12px;
+    border:none;
+    background: var(--bottle-green);
+    color:#fff;
+    font-weight:600;
+    font-size:13.5px;
+    cursor:pointer;
+    font-family:'Work Sans', sans-serif;
+  }
+  .connect-btn:disabled{ opacity:0.6; }
+  .connect-error{
+    margin-top:12px;
+    font-size:12px;
+    color: var(--rust);
+    display:none;
+  }
+  .connect-demo{
+    margin-top:16px;
+    text-align:center;
+    font-size:12px;
+    color: var(--ink-soft);
+    text-decoration:underline;
+    cursor:pointer;
+  }
+  .connect-loading{
+    display:none;
+    align-items:center;
+    gap:8px;
+    font-size:12.5px;
+    color: var(--ink-soft);
+    margin-top:10px;
+  }
+  .spinner{
+    width:14px; height:14px;
+    border-radius:50%;
+    border:2px solid var(--line);
+    border-top-color: var(--brass);
+    animation: spin .8s linear infinite;
+  }
+
+  /* ---------- FAB (New Sale button) ---------- */
+  .fab{
+    position:fixed;
+    bottom: 86px;
+    right: 20px;
+    width:56px; height:56px;
+    border-radius:18px;
+    background: var(--bottle-green);
+    color:#fff;
+    border:none;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow: 0 14px 26px -10px rgba(30,58,43,0.55);
+    cursor:pointer;
+    z-index:25;
+  }
+  .fab svg{ width:24px; height:24px; }
+  @media (min-width: 720px){
+    .fab{ right: calc(50% - 280px + 20px); }
+  }
+
+  /* ---------- NEW SALE MODAL ---------- */
+  .modal-overlay{
+    position:fixed;
+    inset:0;
+    background: rgba(20,26,20,0.45);
+    display:none;
+    align-items:flex-end;
+    justify-content:center;
+    z-index:50;
+  }
+  .modal-overlay.open{ display:flex; }
+  .modal-sheet{
+    width:100%;
+    max-width: 560px;
+    background: var(--cream);
+    border-radius: 24px 24px 0 0;
+    padding: 22px 22px 26px;
+    max-height: 88vh;
+    overflow-y:auto;
+    animation: slideUp .3s ease;
+  }
+  @keyframes slideUp{ from{ transform:translateY(30px); opacity:0; } to{ transform:translateY(0); opacity:1; } }
+  .modal-title{
+    font-family:'Fraunces', serif;
+    font-size:20px;
+    font-weight:600;
+    color: var(--bottle-green);
+  }
+  .modal-sub{
+    font-size:12px;
+    color: var(--ink-soft);
+    margin-top:2px;
+    margin-bottom:16px;
+  }
+  .field-label{
+    font-size:11.5px;
+    font-weight:600;
+    color: var(--ink);
+    margin: 12px 0 5px;
+  }
+  .field-input{
+    width:100%;
+    padding:11px 13px;
+    border-radius:11px;
+    border:1.5px solid var(--line);
+    background: var(--cream-card);
+    font-size:14px;
+    color: var(--ink);
+    font-family:'Work Sans', sans-serif;
+    outline:none;
+  }
+  .field-input:focus{ border-color: var(--brass); }
+  .date-note{
+    font-size:11.5px;
+    color: var(--ink-soft);
+    background: var(--cream-card);
+    border:1px dashed var(--line);
+    border-radius:10px;
+    padding:8px 11px;
+    margin-top:12px;
+  }
+  .date-note b{ color: var(--bottle-green); }
+  .modal-summary{
+    margin-top:14px;
+    background: var(--bottle-green);
+    border-radius:12px;
+    padding:11px 14px;
+    color:#fff;
+    display:flex;
+    justify-content:space-between;
+    font-size:12.5px;
+  }
+  .modal-summary div span{ display:block; font-size:10.5px; opacity:0.7; }
+  .modal-summary div b{ font-size:15px; }
+  .modal-msg{
+    margin-top:12px;
+    font-size:12px;
+    padding:9px 12px;
+    border-radius:10px;
+    display:none;
+  }
+  .modal-msg.error{ background:#F7E4DE; color:var(--rust); display:block; }
+  .modal-msg.success{ background:#E4EEDD; color:var(--sage); display:block; }
+  .modal-btn-row{
+    display:flex;
+    gap:10px;
+    margin-top:18px;
+  }
+  .modal-btn-row button{
+    flex:1;
+    padding:12px;
+    border-radius:11px;
+    border:none;
+    font-size:13.5px;
+    font-weight:600;
+    cursor:pointer;
+    font-family:'Work Sans', sans-serif;
+  }
+  #saleSubmitBtn{ background: var(--bottle-green); color:#fff; }
+  #saleSubmitBtn:disabled{ opacity:0.6; cursor:not-allowed; }
+  #saleCancelBtn{ background: var(--cream-card); color: var(--ink-soft); border:1.5px solid var(--line); }
+
+  /* ---------- SEARCH BAR ---------- */
+  .search-wrap{
+    margin: 4px 22px 6px;
+    position:relative;
+    display:flex;
+    align-items:center;
+  }
+  .search-wrap svg{
+    position:absolute;
+    left:13px;
+    width:16px; height:16px;
+    color: var(--ink-soft);
+  }
+  .search-wrap input{
+    width:100%;
+    padding:11px 14px 11px 38px;
+    border-radius:12px;
+    border:1.5px solid var(--line);
+    background: var(--cream-card);
+    font-size:13.5px;
+    color: var(--ink);
+    font-family:'Work Sans', sans-serif;
+    outline:none;
+  }
+  .search-wrap input:focus{ border-color: var(--brass); }
+
+  /* ---------- EXPORT BUTTON ---------- */
+  .export-btn{
+    display:flex;
+    align-items:center;
+    gap:5px;
+    padding:6px 12px;
+    border-radius:9px;
+    border:1px solid var(--line);
+    background: var(--cream-card);
+    color: var(--bottle-green);
+    font-size:11.5px;
+    font-weight:600;
+    cursor:pointer;
+    font-family:'Work Sans', sans-serif;
+  }
+  .export-btn svg{ width:13px; height:13px; }
+
+  /* ---------- CLICKABLE BUYER CARD ---------- */
+  .buyer-card{ cursor:pointer; transition: transform .12s ease; }
+  .buyer-card:active{ transform: scale(0.98); }
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <div class="connect-screen" id="connectScreen">
+    <div class="connect-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 12h.01M12 12h.01M16 12h.01M8 16h.01M12 16h.01M16 16h.01"/><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/></svg>
+    </div>
+    <div class="connect-title">Connect your Sheet</div>
+    <div class="connect-copy">
+      Paste the Apps Script Web App URL from your Goat Milk Wholesale Tracker.
+      This link lets the dashboard read your live Buyers &amp; Sales Orders data.
+    </div>
+    <input type="text" class="connect-input" id="apiUrlInput" placeholder="https://script.google.com/macros/s/.../exec">
+    <button class="connect-btn" id="connectBtn">Connect &amp; Load</button>
+    <div class="connect-loading" id="connectLoading"><div class="spinner"></div><span>Loading your data…</span></div>
+    <div class="connect-error" id="connectError">Couldn't reach that URL. Check the link and that the deployment access is set to "Anyone".</div>
+    <div class="connect-demo" id="demoLink">Just exploring? View with sample data</div>
+  </div>
+
+  <div class="screen">
+
+    <!-- ================= OVERVIEW ================= -->
+    <div class="view active" id="view-overview">
+      <div class="header">
+        <div class="eyebrow-row">
+          <div class="eyebrow">Moofresh Hanoon</div>
+          <button class="refresh-btn" id="refreshBtn" title="Refresh data">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 4v5h-5"/></svg>
+          </button>
+        </div>
+        <h1 class="title">Welcome back</h1>
+        <div class="subtitle" id="todayLine"></div>
+      </div>
+
+      <div class="gauge-card">
+        <div class="bottle-wrap">
+          <svg width="54" height="90" viewBox="0 0 54 90" fill="none">
+            <defs>
+              <clipPath id="bottleClip">
+                <path d="M18 6H36V18C36 20 38 21 39 23C41 27 43 30 43 36V80C43 84.4 39.4 88 35 88H19C14.6 88 11 84.4 11 80V36C11 30 13 27 15 23C16 21 18 20 18 18V6Z"/>
+              </clipPath>
+            </defs>
+            <path d="M18 6H36V18C36 20 38 21 39 23C41 27 43 30 43 36V80C43 84.4 39.4 88 35 88H19C14.6 88 11 84.4 11 80V36C11 30 13 27 15 23C16 21 18 20 18 18V6Z"
+                  fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.5)" stroke-width="1.5"/>
+            <g clip-path="url(#bottleClip)">
+              <rect id="fillRect" x="10" y="88" width="34" height="0" fill="#F7F2E4"/>
+            </g>
+            <rect x="21" y="1" width="12" height="6" rx="1.5" fill="rgba(255,255,255,0.5)"/>
+          </svg>
+        </div>
+        <div class="gauge-text">
+          <div class="gauge-label">Collection Rate</div>
+          <div class="gauge-value" id="collectionPct">0%</div>
+          <div class="gauge-sub">Rs. <b id="receivedShort">0</b> collected of Rs. <span id="revenueShort">0</span></div>
+        </div>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">Total Revenue</div>
+          <div class="kpi-value" id="kpiRevenue">Rs. 0</div>
+          <div class="kpi-unit" id="kpiSalesCount">0 sales</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Bottles Sold</div>
+          <div class="kpi-value" id="kpiBottles">0</div>
+          <div class="kpi-unit">this month</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Received</div>
+          <div class="kpi-value" id="kpiReceived">Rs. 0</div>
+          <div class="kpi-unit">across all buyers</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Pending</div>
+          <div class="kpi-value rust" id="kpiPending">Rs. 0</div>
+          <div class="kpi-unit" id="kpiPendingCount">0 unpaid</div>
+        </div>
+      </div>
+
+      <div class="section-head">
+        <div class="section-title">Needs follow-up</div>
+        <div class="section-count" id="followupCount">0</div>
+      </div>
+      <div class="buyer-list" id="followupList"></div>
+
+      <div class="footnote">Pull up Buyers or Sales below for full detail</div>
+    </div>
+
+    <!-- ================= BUYERS ================= -->
+    <div class="view" id="view-buyers">
+      <div class="header">
+        <div class="eyebrow">Ledger</div>
+        <h1 class="title">Buyers</h1>
+        <div class="subtitle">Balance by retailer &amp; wholesaler</div>
+      </div>
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input type="text" id="buyerSearch" placeholder="Search buyer name…">
+      </div>
+      <div class="section-head" style="margin-top:4px;">
+        <div class="section-title">All buyers</div>
+        <div class="section-count" id="buyerCount">0</div>
+      </div>
+      <div class="buyer-list" id="buyerList"></div>
+      <div class="footnote">Tap a buyer to see their full purchase history</div>
+    </div>
+
+    <!-- ================= SALES ================= -->
+    <div class="view" id="view-sales">
+      <div class="header">
+        <div class="eyebrow-row">
+          <div class="eyebrow">Ledger</div>
+          <button class="export-btn" id="exportCsvBtn" title="Export CSV">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M4 19h16"/></svg>
+            CSV
+          </button>
+        </div>
+        <h1 class="title">Sales Log</h1>
+        <div class="subtitle">Latest deliveries, newest first</div>
+      </div>
+      <div class="section-head" style="margin-top:4px;">
+        <div class="section-title">Recent sales</div>
+        <div class="section-count" id="saleCount">0</div>
+      </div>
+      <div id="saleList"></div>
+      <div class="footnote">Full history &amp; payment log lives in the Sales sheet</div>
+    </div>
+
+  </div>
+
+  <!-- ================= BUYER DETAIL MODAL ================= -->
+  <div class="modal-overlay" id="buyerDetailOverlay">
+    <div class="modal-sheet">
+      <div class="modal-title" id="buyerDetailName">Buyer</div>
+      <div class="modal-sub" id="buyerDetailMeta">Area · Type</div>
+
+      <div class="modal-summary" style="margin-top:14px;">
+        <div><span>Total Business</span><b id="buyerDetailTotal">Rs. 0</b></div>
+        <div><span>Balance Due</span><b id="buyerDetailBalance">Rs. 0</b></div>
+      </div>
+
+      <div class="section-head" style="margin:18px 0 10px; padding:0;">
+        <div class="section-title" style="font-size:15px;">Purchase history</div>
+        <div class="section-count" id="buyerDetailCount">0</div>
+      </div>
+      <div id="buyerDetailSales"></div>
+
+      <div class="modal-btn-row">
+        <button id="buyerDetailCloseBtn" type="button" style="background:var(--bottle-green);color:#fff;">Close</button>
+      </div>
+    </div>
+  </div>
+
+
+  <button class="fab" id="fabNewSale" title="New Sale">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+  </button>
+
+  <div class="modal-overlay" id="saleModalOverlay">
+    <div class="modal-sheet">
+      <div class="modal-title">🐐 New Sale</div>
+      <div class="modal-sub">Creates a row in your Sales sheet instantly.</div>
+
+      <div class="field-label">Buyer Name</div>
+      <input type="text" class="field-input" id="saleBuyerName" list="saleBuyerList" placeholder="Type or pick a buyer" autocomplete="off">
+      <datalist id="saleBuyerList"></datalist>
+
+      <div class="field-label">Bottles</div>
+      <input type="number" class="field-input" id="saleBottles" min="1" step="1" placeholder="e.g. 50">
+
+      <div class="field-label">Per Bottle Price (Rs.)</div>
+      <input type="number" class="field-input" id="salePrice" min="0" step="0.01" placeholder="e.g. 220">
+
+      <div class="field-label">Paid Amount (Rs.)</div>
+      <input type="number" class="field-input" id="salePaid" min="0" step="0.01" placeholder="0 if nothing paid yet">
+
+      <div class="field-label">Remark (optional)</div>
+      <input type="text" class="field-input" id="saleRemark" placeholder="e.g. Morning delivery">
+
+      <div class="date-note">Distribution Date: <b id="saleTodayDisplay"></b> (added automatically)</div>
+
+      <div class="modal-summary">
+        <div><span>Total Amount</span><b id="saleTotalDisplay">Rs. 0</b></div>
+        <div><span>Balance Due</span><b id="saleBalanceDisplay">Rs. 0</b></div>
+      </div>
+
+      <div class="modal-msg" id="saleMsgBox"></div>
+
+      <div class="modal-btn-row">
+        <button id="saleCancelBtn" type="button">Cancel</button>
+        <button id="saleSubmitBtn" type="button">Create Sale</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabbar">
+    <button class="tab active" data-view="overview">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+      <span>Overview</span>
+    </button>
+    <button class="tab" data-view="buyers">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.2"/><path d="M2.5 20c0-3.6 2.9-6.2 6.5-6.2s6.5 2.6 6.5 6.2"/><circle cx="17.5" cy="8.5" r="2.4"/><path d="M15.5 14.2c2.9.3 4.9 2.6 4.9 5.8"/></svg>
+      <span>Buyers</span>
+    </button>
+    <button class="tab" data-view="sales">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z"/><path d="M9 12h7M9 16h7M9 8h3"/></svg>
+      <span>Sales</span>
+    </button>
+  </div>
+</div>
+
+<script>
+  // ============================================================
+  //  PASTE YOUR APPS SCRIPT WEB APP URL BELOW (between the quotes)
+  //  so the dashboard connects automatically — no pasting needed
+  //  each time you open it on your phone.
+  //  Example: 'https://script.google.com/macros/s/AKfycb.../exec'
+  // ============================================================
+  const DEFAULT_API_URL = 'https://script.google.com/macros/s/AKfycbzl_XdeHfMve45ak5i01eZuO2Dk6RE1Sf06mgSTvZNhWi3W3n88FFUPCk9kQ4y23XeS/exec';
+
+  // ---- STATE (in-memory only — no localStorage, per session) ----
+  let API_URL = '';
+  let buyers = [];
+  let sales = [];
+  let ledger = [];
+
+  const fmt = n => 'Rs. ' + Math.round(n).toLocaleString('en-IN');
+  const initials = name => (name || '?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+
+  function statusOf(total, received){
+    if(total === 0) return 'unpaid';
+    if(received >= total) return 'paid';
+    if(received === 0) return 'unpaid';
+    return 'partial';
+  }
+  function statusLabel(s){
+    return s === 'paid' ? 'Paid' : s === 'partial' ? 'Partial' : 'Not Paid';
+  }
+
+  // ---- SAMPLE DATA (used only for "View with sample data") ----
+  const SAMPLE = {
+    buyers: [
+      { id:'BUY001', name:'Nimal Stores', area:'Kandy', type:'Retailer' },
+      { id:'BUY002', name:'Green Mart', area:'Colombo', type:'Wholesaler' },
+      { id:'BUY003', name:'Lakshan Traders', area:'Galle', type:'Retailer' },
+    ],
+    sales: [
+      { id:'SALE004', date:'2026-07-09', buyerId:'BUY001', bottles:40, price:220, received:8800 },
+      { id:'SALE003', date:'2026-07-06', buyerId:'BUY003', bottles:80, price:215, received:17200 },
+      { id:'SALE002', date:'2026-07-03', buyerId:'BUY002', bottles:200, price:210, received:0 },
+      { id:'SALE001', date:'2026-07-01', buyerId:'BUY001', bottles:50, price:220, received:8000 },
+    ]
+  };
+
+  function processData(rawBuyers, rawSales){
+    buyers = rawBuyers;
+    sales = rawSales.map(s => {
+      const total = s.total != null ? s.total : s.bottles * s.price;
+      const received = s.received || 0;
+      return {
+        ...s,
+        total,
+        balance: total - received,
+        status: statusOf(total, received),
+        buyerObj: buyers.find(b => b.id === s.buyerId) || { name: s.buyerName || 'Unknown', area:'', type:'' }
+      };
+    });
+
+    ledger = buyers.map(b => {
+      const rows = sales.filter(s => s.buyerId === b.id);
+      const bottles = rows.reduce((a,s)=>a+s.bottles,0);
+      const total = rows.reduce((a,s)=>a+s.total,0);
+      const received = rows.reduce((a,s)=>a+s.received,0);
+      return { ...b, bottles, total, received, balance: total-received, status: statusOf(total, received), orders: rows.length };
+    });
+
+    render();
+  }
+
+  function render(){
+    const totalRevenue = sales.reduce((a,s)=>a+s.total,0);
+    const totalReceived = sales.reduce((a,s)=>a+s.received,0);
+    const totalPending = totalRevenue - totalReceived;
+    const totalBottles = sales.reduce((a,s)=>a+s.bottles,0);
+    const unpaidCount = sales.filter(s=>s.status!=='paid').length;
+    const collectionPct = totalRevenue ? Math.round((totalReceived/totalRevenue)*100) : 0;
+
+    document.getElementById('kpiRevenue').textContent = fmt(totalRevenue);
+    document.getElementById('kpiSalesCount').textContent = sales.length + ' sales';
+    document.getElementById('kpiBottles').textContent = totalBottles.toLocaleString('en-IN');
+    document.getElementById('kpiReceived').textContent = fmt(totalReceived);
+    document.getElementById('kpiPending').textContent = fmt(totalPending);
+    document.getElementById('kpiPendingCount').textContent = unpaidCount + ' unpaid';
+    document.getElementById('collectionPct').textContent = collectionPct + '%';
+    document.getElementById('receivedShort').textContent = Math.round(totalReceived).toLocaleString('en-IN');
+    document.getElementById('revenueShort').textContent = Math.round(totalRevenue).toLocaleString('en-IN');
+
+    const today = new Date();
+    document.getElementById('todayLine').textContent = today.toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long' });
+
+    requestAnimationFrame(()=>{
+      const maxH = 80;
+      const h = Math.max(4, (collectionPct/100) * maxH);
+      const rect = document.getElementById('fillRect');
+      rect.setAttribute('y', 88 - h);
+      rect.setAttribute('height', h);
+    });
+
+    const followups = ledger.filter(b => b.status !== 'paid').sort((a,b)=>b.balance-a.balance);
+    document.getElementById('followupCount').textContent = followups.length;
+    const followupList = document.getElementById('followupList');
+    followupList.innerHTML = followups.length === 0
+      ? '<div class="empty-state">All buyers are settled up. Nothing pending right now.</div>'
+      : followups.map(b => buyerCardHTML(b)).join('');
+
+    renderBuyerList();
+
+    document.getElementById('saleCount').textContent = sales.length;
+    document.getElementById('saleList').innerHTML = sales.length === 0
+      ? '<div class="empty-state">No sales logged yet.</div>'
+      : sales.map(s => `
+      <div class="sale-row ${s.status === 'paid' ? 'paid' : s.status === 'unpaid' ? 'unpaid' : ''}">
+        <div>
+          <div class="sale-id">${s.id} · ${s.date ? new Date(s.date).toLocaleDateString('en-GB',{day:'2-digit',month:'short'}) : ''}</div>
+          <div class="sale-buyer">${s.buyerObj.name}</div>
+          <div class="sale-detail">${s.bottles} bottles @ Rs. ${s.price}</div>
+        </div>
+        <div class="sale-amount">
+          <div class="sale-total">${fmt(s.total)}</div>
+          <span class="status-pill status-${s.status}">${statusLabel(s.status)}</span>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // ---- Buyer list with search filtering ----
+  function renderBuyerList(){
+    const query = (document.getElementById('buyerSearch').value || '').trim().toLowerCase();
+    const filtered = ledger
+      .filter(b => !query || b.name.toLowerCase().includes(query))
+      .sort((a,b)=>b.total-a.total);
+
+    document.getElementById('buyerCount').textContent = filtered.length;
+    document.getElementById('buyerList').innerHTML = filtered.length === 0
+      ? '<div class="empty-state">No buyers match your search.</div>'
+      : filtered.map(b => buyerCardHTML(b, true)).join('');
+
+    // attach click handlers for buyer detail
+    document.querySelectorAll('#buyerList .buyer-card').forEach(card => {
+      card.addEventListener('click', () => openBuyerDetail(card.dataset.buyer));
+    });
+  }
+  document.getElementById('buyerSearch').addEventListener('input', renderBuyerList);
+
+  function buyerCardHTML(b, showMeta){
+    return `
+      <div class="buyer-card" data-buyer="${b.name.replace(/"/g,'&quot;')}">
+        <div class="buyer-avatar">${initials(b.name)}</div>
+        <div class="buyer-info">
+          <div class="buyer-name">${b.name}</div>
+          <div class="buyer-meta">${b.area || '—'} · ${b.type || '—'}${showMeta ? ' · ' + b.orders + ' orders' : ''}</div>
+        </div>
+        <div class="buyer-amounts">
+          <div class="buyer-total">${fmt(b.balance > 0 ? b.balance : b.total)}</div>
+          <span class="status-pill status-${b.status}">${statusLabel(b.status)}</span>
+        </div>
+      </div>`;
+  }
+
+  // ---- Buyer detail modal ----
+  function openBuyerDetail(name){
+    const b = ledger.find(x => x.name === name);
+    if (!b) return;
+    const rows = sales.filter(s => s.buyerId === b.id || s.buyerObj.name === b.name)
+      .sort((a,c) => new Date(c.date) - new Date(a.date));
+
+    document.getElementById('buyerDetailName').textContent = b.name;
+    document.getElementById('buyerDetailMeta').textContent = `${b.area || '—'} · ${b.type || '—'}`;
+    document.getElementById('buyerDetailTotal').textContent = fmt(b.total);
+    document.getElementById('buyerDetailBalance').textContent = fmt(b.balance);
+    document.getElementById('buyerDetailCount').textContent = rows.length;
+
+    document.getElementById('buyerDetailSales').innerHTML = rows.length === 0
+      ? '<div class="empty-state">No purchases yet.</div>'
+      : rows.map(s => `
+        <div class="sale-row ${s.status === 'paid' ? 'paid' : s.status === 'unpaid' ? 'unpaid' : ''}">
+          <div>
+            <div class="sale-id">${s.date ? new Date(s.date).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}) : ''}</div>
+            <div class="sale-detail">${s.bottles} bottles @ Rs. ${s.price}</div>
+          </div>
+          <div class="sale-amount">
+            <div class="sale-total">${fmt(s.total)}</div>
+            <span class="status-pill status-${s.status}">${statusLabel(s.status)}</span>
+          </div>
+        </div>
+      `).join('');
+
+    document.getElementById('buyerDetailOverlay').classList.add('open');
+  }
+  document.getElementById('buyerDetailCloseBtn').addEventListener('click', () => {
+    document.getElementById('buyerDetailOverlay').classList.remove('open');
+  });
+  document.getElementById('buyerDetailOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'buyerDetailOverlay') e.target.classList.remove('open');
+  });
+
+  // ---- CSV export ----
+  function exportSalesCsv(){
+    const header = ['Buyer', 'Date', 'Bottles', 'Price', 'Total', 'Received', 'Balance', 'Status'];
+    const lines = [header.join(',')];
+    sales.forEach(s => {
+      const row = [
+        `"${(s.buyerObj.name || '').replace(/"/g,'""')}"`,
+        s.date ? new Date(s.date).toLocaleDateString('en-GB') : '',
+        s.bottles, s.price, s.total, s.received, s.balance, s.status
+      ];
+      lines.push(row.join(','));
+    });
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'moofresh-hanoon-sales-' + new Date().toISOString().slice(0,10) + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+  document.getElementById('exportCsvBtn').addEventListener('click', exportSalesCsv);
+
+
+  // ---- Fetch live data from the Apps Script Web App ----
+  async function loadFromApi(url){
+    const loading = document.getElementById('connectLoading');
+    const errorBox = document.getElementById('connectError');
+    const btn = document.getElementById('connectBtn');
+    loading.style.display = 'flex';
+    errorBox.style.display = 'none';
+    btn.disabled = true;
+
+    try{
+      const res = await fetch(url);
+      if(!res.ok) throw new Error('Bad response');
+      const data = await res.json();
+      API_URL = url;
+      processData(data.buyers || [], (data.sales || []).map(s => ({ ...s })));
+      document.getElementById('connectScreen').classList.add('hidden');
+    } catch(err){
+      errorBox.style.display = 'block';
+    } finally {
+      loading.style.display = 'none';
+      btn.disabled = false;
+    }
+  }
+
+  document.getElementById('connectBtn').addEventListener('click', () => {
+    const url = document.getElementById('apiUrlInput').value.trim();
+    if(!url) return;
+    loadFromApi(url);
+  });
+
+  document.getElementById('demoLink').addEventListener('click', () => {
+    processData(SAMPLE.buyers, SAMPLE.sales);
+    document.getElementById('connectScreen').classList.add('hidden');
+  });
+
+  document.getElementById('refreshBtn').addEventListener('click', () => {
+    const btn = document.getElementById('refreshBtn');
+    btn.classList.add('spinning');
+    if(API_URL){
+      fetch(API_URL).then(r=>r.json()).then(data=>{
+        processData(data.buyers || [], data.sales || []);
+      }).finally(()=> btn.classList.remove('spinning'));
+    } else {
+      setTimeout(()=> btn.classList.remove('spinning'), 600);
+    }
+  });
+
+  // ---- Auto-connect if a default URL is configured ----
+  if (DEFAULT_API_URL && DEFAULT_API_URL.trim()) {
+    document.getElementById('apiUrlInput').value = DEFAULT_API_URL.trim();
+    loadFromApi(DEFAULT_API_URL.trim());
+  }
+
+  // ============================================================
+  //  NEW SALE MODAL — create a sale from the web, writes to Sheet
+  // ============================================================
+  const overlay = document.getElementById('saleModalOverlay');
+  const fmtSaleModal = n => 'Rs. ' + Math.round(n || 0).toLocaleString('en-IN');
+
+  function openSaleModal(){
+    if (!API_URL) {
+      alert('Connect your sheet first (see the Connect screen) before creating a sale.');
+      return;
+    }
+    document.getElementById('saleTodayDisplay').textContent =
+      new Date().toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' });
+
+    const list = document.getElementById('saleBuyerList');
+    list.innerHTML = '';
+    buyers.forEach(b => {
+      const opt = document.createElement('option');
+      opt.value = b.name;
+      list.appendChild(opt);
+    });
+
+    ['saleBuyerName','saleBottles','salePrice','salePaid','saleRemark'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    document.getElementById('saleTotalDisplay').textContent = 'Rs. 0';
+    document.getElementById('saleBalanceDisplay').textContent = 'Rs. 0';
+    document.getElementById('saleMsgBox').className = 'modal-msg';
+    document.getElementById('saleMsgBox').textContent = '';
+    const btn = document.getElementById('saleSubmitBtn');
+    btn.disabled = false;
+    btn.textContent = 'Create Sale';
+
+    overlay.classList.add('open');
+  }
+
+  function closeSaleModal(){ overlay.classList.remove('open'); }
+
+  document.getElementById('fabNewSale').addEventListener('click', openSaleModal);
+  document.getElementById('saleCancelBtn').addEventListener('click', closeSaleModal);
+  overlay.addEventListener('click', (e) => { if (e.target === overlay) closeSaleModal(); });
+
+  function recalcSaleModal(){
+    const bottles = parseFloat(document.getElementById('saleBottles').value) || 0;
+    const price = parseFloat(document.getElementById('salePrice').value) || 0;
+    const paid = parseFloat(document.getElementById('salePaid').value) || 0;
+    const total = bottles * price;
+    document.getElementById('saleTotalDisplay').textContent = fmtSaleModal(total);
+    document.getElementById('saleBalanceDisplay').textContent = fmtSaleModal(total - paid);
+  }
+  ['saleBottles','salePrice','salePaid'].forEach(id => {
+    document.getElementById(id).addEventListener('input', recalcSaleModal);
+  });
+
+  function showSaleMsg(text, type){
+    const box = document.getElementById('saleMsgBox');
+    box.textContent = text;
+    box.className = 'modal-msg ' + type;
+  }
+
+  document.getElementById('saleSubmitBtn').addEventListener('click', async () => {
+    const buyerName = document.getElementById('saleBuyerName').value.trim();
+    const bottles = document.getElementById('saleBottles').value;
+    const price = document.getElementById('salePrice').value;
+    const paid = document.getElementById('salePaid').value || 0;
+    const remark = document.getElementById('saleRemark').value.trim();
+
+    if (!buyerName) { showSaleMsg('Please enter a buyer name.', 'error'); return; }
+    if (!bottles || Number(bottles) <= 0) { showSaleMsg('Please enter number of bottles.', 'error'); return; }
+    if (!price || Number(price) <= 0) { showSaleMsg('Please enter price per bottle.', 'error'); return; }
+
+    const btn = document.getElementById('saleSubmitBtn');
+    btn.disabled = true;
+    btn.textContent = 'Creating...';
+
+    try {
+      // Content-Type text/plain avoids a CORS preflight to the Apps Script web app.
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({
+          action: 'createSale',
+          payload: { buyerName, bottles, price, paid, remark }
+        })
+      });
+      const data = await res.json();
+
+      if (!data.success) throw new Error(data.error || 'Could not create the sale.');
+
+      showSaleMsg('Sale created! Total ' + fmtSaleModal(data.total) + ', balance ' + fmtSaleModal(data.balance) + '.', 'success');
+
+      // refresh dashboard data from the sheet
+      const fresh = await fetch(API_URL).then(r => r.json());
+      processData(fresh.buyers || [], fresh.sales || []);
+
+      setTimeout(closeSaleModal, 1300);
+    } catch (err) {
+      btn.disabled = false;
+      btn.textContent = 'Create Sale';
+      showSaleMsg(err.message || 'Something went wrong. Please try again.', 'error');
+    }
+  });
+
+  // ---- Tab switching ----
+  document.querySelectorAll('.tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+      document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById('view-' + tab.dataset.view).classList.add('active');
+      window.scrollTo({top:0, behavior:'smooth'});
+    });
+  });
+</script>
+
+</body>
+</html>
