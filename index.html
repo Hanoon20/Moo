@@ -896,29 +896,32 @@
       { id:'BUY003', name:'Lakshan Traders', area:'Galle', type:'Retailer' },
     ],
     sales: [
-      { id:'SALE004', date:'2026-07-09', buyerId:'BUY001', bottles:40, price:220, received:8800 },
-      { id:'SALE003', date:'2026-07-06', buyerId:'BUY003', bottles:80, price:215, received:17200 },
-      { id:'SALE002', date:'2026-07-03', buyerId:'BUY002', bottles:200, price:210, received:0 },
-      { id:'SALE001', date:'2026-07-01', buyerId:'BUY001', bottles:50, price:220, received:8000 },
+      { id:'SALE004', date:'2026-07-09', buyerName:'Nimal Stores', bottles:40, price:220, received:8800 },
+      { id:'SALE003', date:'2026-07-06', buyerName:'Lakshan Traders', bottles:80, price:215, received:17200 },
+      { id:'SALE002', date:'2026-07-03', buyerName:'Green Mart', bottles:200, price:210, received:0 },
+      { id:'SALE001', date:'2026-07-01', buyerName:'Nimal Stores', bottles:50, price:220, received:8000 },
     ]
   };
+
+  const normName = n => (n || '').toString().trim().toLowerCase();
 
   function processData(rawBuyers, rawSales){
     buyers = rawBuyers;
     sales = rawSales.map(s => {
       const total = s.total != null ? s.total : s.bottles * s.price;
       const received = s.received || 0;
+      const matchedBuyer = buyers.find(b => normName(b.name) === normName(s.buyerName));
       return {
         ...s,
         total,
         balance: total - received,
         status: statusOf(total, received),
-        buyerObj: buyers.find(b => b.id === s.buyerId) || { name: s.buyerName || 'Unknown', area:'', type:'' }
+        buyerObj: matchedBuyer || { name: s.buyerName || 'Unknown', area:'', type:'' }
       };
     });
 
     ledger = buyers.map(b => {
-      const rows = sales.filter(s => s.buyerId === b.id);
+      const rows = sales.filter(s => normName(s.buyerName) === normName(b.name));
       const bottles = rows.reduce((a,s)=>a+s.bottles,0);
       const total = rows.reduce((a,s)=>a+s.total,0);
       const received = rows.reduce((a,s)=>a+s.received,0);
@@ -1042,7 +1045,7 @@
   function openBuyerDetail(name){
     const b = ledger.find(x => x.name === name);
     if (!b) return;
-    const rows = sales.filter(s => s.buyerId === b.id || s.buyerObj.name === b.name)
+    const rows = sales.filter(s => normName(s.buyerName) === normName(b.name))
       .sort((a,c) => new Date(c.date) - new Date(a.date));
 
     document.getElementById('buyerDetailName').textContent = b.name;
