@@ -6,6 +6,9 @@
 <title>Moofresh Hanoon — Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#1E3A2B">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
 <style>
   :root{
     --cream: #F5EFE1;
@@ -439,18 +442,87 @@
   }
   .connect-loading{
     display:none;
+    flex-direction:column;
     align-items:center;
-    gap:8px;
+    gap:6px;
     font-size:12.5px;
     color: var(--ink-soft);
-    margin-top:10px;
+    margin-top:14px;
   }
-  .spinner{
-    width:14px; height:14px;
-    border-radius:50%;
-    border:2px solid var(--line);
-    border-top-color: var(--brass);
-    animation: spin .8s linear infinite;
+  .spinner{ display:none; }
+
+  /* ---------- MILK FACTORY LOADER ---------- */
+  .milk-factory{
+    position:relative;
+    width:220px;
+    height:150px;
+    overflow:hidden;
+  }
+  .milk-machine{
+    position:absolute;
+    top:0; left:50%;
+    transform:translateX(-50%);
+    width:66px; height:82px;
+    z-index:3;
+  }
+  .machine-body{ fill: var(--cream-card); stroke: var(--brass); stroke-width:3; }
+  .machine-window{ fill: var(--sage-bg); stroke: var(--brass); stroke-width:2; }
+  .machine-knob{ fill: var(--bottle-green); stroke: var(--bottle-green-light); stroke-width:1.5; }
+  .machine-knob-mark{ stroke:#fff; stroke-width:2; stroke-linecap:round; }
+  .machine-nozzle{ fill: var(--brass); stroke: var(--brass); stroke-width:1.5; }
+
+  .milk-stream{
+    position:absolute;
+    top:64px; left:50%;
+    transform:translateX(-50%);
+    width:4px; height:34px;
+    background: linear-gradient(#fffef8,#fdf6e3);
+    border-radius:3px;
+    opacity:0;
+    z-index:3;
+    animation: streamPulse 4.5s linear infinite;
+  }
+  @keyframes streamPulse{
+    0%{opacity:0;} 12%{opacity:0;} 14%{opacity:1;} 25%{opacity:1;} 27%{opacity:0;}
+    44%{opacity:0;} 47%{opacity:1;} 58%{opacity:1;} 60%{opacity:0;}
+    77%{opacity:0;} 80%{opacity:1;} 91%{opacity:1;} 93%{opacity:0;} 100%{opacity:0;}
+  }
+
+  .milk-belt{
+    position:absolute;
+    bottom:14px; left:0; right:0;
+    height:3px;
+    background: var(--line);
+    border-radius:2px;
+  }
+  .milk-bottle-slot{
+    position:absolute;
+    bottom:14px;
+    width:30px; height:52px;
+    animation: bottleMoveAcross 4.5s linear infinite;
+  }
+  .milk-bottle-slot:nth-child(5){ animation-delay:-1.5s; }
+  .milk-bottle-slot:nth-child(6){ animation-delay:-3s; }
+  @keyframes bottleMoveAcross{
+    0%{ left:240px; }
+    100%{ left:-50px; }
+  }
+  .milk-bottle-outline{
+    position:absolute; inset:0;
+    background: rgba(253,251,245,0.6);
+    border:2px solid var(--brass);
+    clip-path: polygon(38% 0%,62% 0%,62% 16%,88% 30%,88% 92%,78% 100%,22% 100%,12% 92%,12% 30%,38% 16%);
+  }
+  .milk-bottle-fill{
+    position:absolute; bottom:0; left:0; right:0;
+    height:0%;
+    background: linear-gradient(var(--brass-light), var(--brass));
+    animation: bottleFill 4.5s linear infinite;
+  }
+  .milk-bottle-slot:nth-child(5) .milk-bottle-fill{ animation-delay:-1.5s; }
+  .milk-bottle-slot:nth-child(6) .milk-bottle-fill{ animation-delay:-3s; }
+  @keyframes bottleFill{
+    0%{height:0%;} 46%{height:0%;} 58%{height:100%;} 92%{height:100%;} 100%{height:0%;}
   }
 
   /* ---------- FAB (New Sale button) ---------- */
@@ -640,7 +712,24 @@
     </div>
     <input type="text" class="connect-input" id="apiUrlInput" placeholder="https://script.google.com/macros/s/.../exec">
     <button class="connect-btn" id="connectBtn">Connect &amp; Load</button>
-    <div class="connect-loading" id="connectLoading"><div class="spinner"></div><span>Loading your data…</span></div>
+    <div class="connect-loading" id="connectLoading">
+      <div class="milk-factory">
+        <svg class="milk-machine" viewBox="0 0 90 110">
+          <rect class="machine-body" x="18" y="6" width="54" height="58" rx="10"/>
+          <rect class="machine-window" x="26" y="16" width="20" height="14" rx="2"/>
+          <circle class="machine-knob" cx="58" cy="42" r="7"/>
+          <line class="machine-knob-mark" x1="58" y1="42" x2="58" y2="36"/>
+          <rect class="machine-body" x="22" y="64" width="46" height="10" rx="3"/>
+          <path class="machine-nozzle" d="M37,74 L53,74 L49,88 L41,88 Z"/>
+        </svg>
+        <div class="milk-stream"></div>
+        <div class="milk-belt"></div>
+        <div class="milk-bottle-slot"><div class="milk-bottle-outline"><div class="milk-bottle-fill"></div></div></div>
+        <div class="milk-bottle-slot"><div class="milk-bottle-outline"><div class="milk-bottle-fill"></div></div></div>
+        <div class="milk-bottle-slot"><div class="milk-bottle-outline"><div class="milk-bottle-fill"></div></div></div>
+      </div>
+      <span>Loading your data…</span>
+    </div>
     <div class="connect-error" id="connectError">Couldn't reach that URL. Check the link and that the deployment access is set to "Anyone".</div>
     <div class="connect-demo" id="demoLink">Just exploring? View with sample data</div>
   </div>
@@ -1338,6 +1427,11 @@
       window.scrollTo({top:0, behavior:'smooth'});
     });
   });
+
+  // ---- PWA: register service worker so the app is installable ----
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  }
 </script>
 
 </body>
