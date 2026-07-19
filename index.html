@@ -6,9 +6,6 @@
 <title>Moofresh Hanoon — Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-<link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#1E3A2B">
-<link rel="apple-touch-icon" href="/icons/icon-192.png">
 <style>
   :root{
     --cream: #F5EFE1;
@@ -442,87 +439,18 @@
   }
   .connect-loading{
     display:none;
-    flex-direction:column;
     align-items:center;
-    gap:6px;
+    gap:8px;
     font-size:12.5px;
     color: var(--ink-soft);
-    margin-top:14px;
+    margin-top:10px;
   }
-  .spinner{ display:none; }
-
-  /* ---------- MILK FACTORY LOADER ---------- */
-  .milk-factory{
-    position:relative;
-    width:220px;
-    height:150px;
-    overflow:hidden;
-  }
-  .milk-machine{
-    position:absolute;
-    top:0; left:50%;
-    transform:translateX(-50%);
-    width:66px; height:82px;
-    z-index:3;
-  }
-  .machine-body{ fill: var(--cream-card); stroke: var(--brass); stroke-width:3; }
-  .machine-window{ fill: var(--sage-bg); stroke: var(--brass); stroke-width:2; }
-  .machine-knob{ fill: var(--bottle-green); stroke: var(--bottle-green-light); stroke-width:1.5; }
-  .machine-knob-mark{ stroke:#fff; stroke-width:2; stroke-linecap:round; }
-  .machine-nozzle{ fill: var(--brass); stroke: var(--brass); stroke-width:1.5; }
-
-  .milk-stream{
-    position:absolute;
-    top:64px; left:50%;
-    transform:translateX(-50%);
-    width:4px; height:34px;
-    background: linear-gradient(#fffef8,#fdf6e3);
-    border-radius:3px;
-    opacity:0;
-    z-index:3;
-    animation: streamPulse 4.5s linear infinite;
-  }
-  @keyframes streamPulse{
-    0%{opacity:0;} 12%{opacity:0;} 14%{opacity:1;} 25%{opacity:1;} 27%{opacity:0;}
-    44%{opacity:0;} 47%{opacity:1;} 58%{opacity:1;} 60%{opacity:0;}
-    77%{opacity:0;} 80%{opacity:1;} 91%{opacity:1;} 93%{opacity:0;} 100%{opacity:0;}
-  }
-
-  .milk-belt{
-    position:absolute;
-    bottom:14px; left:0; right:0;
-    height:3px;
-    background: var(--line);
-    border-radius:2px;
-  }
-  .milk-bottle-slot{
-    position:absolute;
-    bottom:14px;
-    width:30px; height:52px;
-    animation: bottleMoveAcross 4.5s linear infinite;
-  }
-  .milk-bottle-slot:nth-child(5){ animation-delay:-1.5s; }
-  .milk-bottle-slot:nth-child(6){ animation-delay:-3s; }
-  @keyframes bottleMoveAcross{
-    0%{ left:240px; }
-    100%{ left:-50px; }
-  }
-  .milk-bottle-outline{
-    position:absolute; inset:0;
-    background: rgba(253,251,245,0.6);
-    border:2px solid var(--brass);
-    clip-path: polygon(38% 0%,62% 0%,62% 16%,88% 30%,88% 92%,78% 100%,22% 100%,12% 92%,12% 30%,38% 16%);
-  }
-  .milk-bottle-fill{
-    position:absolute; bottom:0; left:0; right:0;
-    height:0%;
-    background: linear-gradient(var(--brass-light), var(--brass));
-    animation: bottleFill 4.5s linear infinite;
-  }
-  .milk-bottle-slot:nth-child(5) .milk-bottle-fill{ animation-delay:-1.5s; }
-  .milk-bottle-slot:nth-child(6) .milk-bottle-fill{ animation-delay:-3s; }
-  @keyframes bottleFill{
-    0%{height:0%;} 46%{height:0%;} 58%{height:100%;} 92%{height:100%;} 100%{height:0%;}
+  .spinner{
+    width:14px; height:14px;
+    border-radius:50%;
+    border:2px solid var(--line);
+    border-top-color: var(--brass);
+    animation: spin .8s linear infinite;
   }
 
   /* ---------- FAB (New Sale button) ---------- */
@@ -646,6 +574,25 @@
   #saleSubmitBtn{ background: var(--bottle-green); color:#fff; }
   #saleSubmitBtn:disabled{ opacity:0.6; cursor:not-allowed; }
   #saleCancelBtn{ background: var(--cream-card); color: var(--ink-soft); border:1.5px solid var(--line); }
+  .whatsapp-btn{
+    width:100%;
+    margin-top:10px;
+    padding:13px;
+    border-radius:11px;
+    border:none;
+    background: #25D366;
+    color:#fff;
+    font-size:14px;
+    font-weight:600;
+    cursor:pointer;
+    font-family:'Work Sans', sans-serif;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+  }
+  .whatsapp-btn svg{ width:18px; height:18px; }
+  .whatsapp-btn:disabled{ opacity:0.6; cursor:not-allowed; }
 
   /* ---------- SEARCH BAR ---------- */
   .search-wrap{
@@ -712,24 +659,7 @@
     </div>
     <input type="text" class="connect-input" id="apiUrlInput" placeholder="https://script.google.com/macros/s/.../exec">
     <button class="connect-btn" id="connectBtn">Connect &amp; Load</button>
-    <div class="connect-loading" id="connectLoading">
-      <div class="milk-factory">
-        <svg class="milk-machine" viewBox="0 0 90 110">
-          <rect class="machine-body" x="18" y="6" width="54" height="58" rx="10"/>
-          <rect class="machine-window" x="26" y="16" width="20" height="14" rx="2"/>
-          <circle class="machine-knob" cx="58" cy="42" r="7"/>
-          <line class="machine-knob-mark" x1="58" y1="42" x2="58" y2="36"/>
-          <rect class="machine-body" x="22" y="64" width="46" height="10" rx="3"/>
-          <path class="machine-nozzle" d="M37,74 L53,74 L49,88 L41,88 Z"/>
-        </svg>
-        <div class="milk-stream"></div>
-        <div class="milk-belt"></div>
-        <div class="milk-bottle-slot"><div class="milk-bottle-outline"><div class="milk-bottle-fill"></div></div></div>
-        <div class="milk-bottle-slot"><div class="milk-bottle-outline"><div class="milk-bottle-fill"></div></div></div>
-        <div class="milk-bottle-slot"><div class="milk-bottle-outline"><div class="milk-bottle-fill"></div></div></div>
-      </div>
-      <span>Loading your data…</span>
-    </div>
+    <div class="connect-loading" id="connectLoading"><div class="spinner"></div><span>Loading your data…</span></div>
     <div class="connect-error" id="connectError">Couldn't reach that URL. Check the link and that the deployment access is set to "Anyone".</div>
     <div class="connect-demo" id="demoLink">Just exploring? View with sample data</div>
   </div>
@@ -895,6 +825,9 @@
       <div class="field-label">Remark (optional)</div>
       <input type="text" class="field-input" id="saleRemark" placeholder="e.g. Morning delivery">
 
+      <div class="field-label">WhatsApp Number (optional)</div>
+      <input type="tel" class="field-input" id="saleWhatsapp" placeholder="e.g. 0771234567">
+
       <div class="date-note">Distribution Date: <b id="saleTodayDisplay"></b> (added automatically)</div>
 
       <div class="modal-summary">
@@ -908,6 +841,10 @@
         <button id="saleCancelBtn" type="button">Cancel</button>
         <button id="saleSubmitBtn" type="button">Create Sale</button>
       </div>
+      <button id="saleWhatsappBtn" type="button" class="whatsapp-btn">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.44.79 3.06 1.2 4.7 1.2h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.05 2h-.01zm5.8 14.13c-.24.68-1.4 1.32-1.94 1.4-.5.08-1.12.11-1.81-.11-.42-.13-.95-.31-1.64-.6-2.88-1.24-4.76-4.14-4.9-4.33-.14-.19-1.18-1.57-1.18-3 0-1.42.75-2.13 1.01-2.42.27-.29.58-.36.77-.36.19 0 .39 0 .55.01.18.01.42-.07.65.5.24.58.82 2 .89 2.15.07.15.12.32.02.51-.09.19-.14.31-.28.48-.14.16-.29.36-.42.49-.14.13-.28.28-.12.55.16.27.72 1.19 1.55 1.93 1.06.95 1.96 1.24 2.23 1.38.27.14.43.12.59-.07.16-.19.68-.79.86-1.06.18-.27.36-.22.6-.13.24.09 1.53.72 1.79.85.26.13.44.19.5.3.06.11.06.63-.18 1.31z"/></svg>
+        Save &amp; Send
+      </button>
     </div>
   </div>
 
@@ -1336,7 +1273,7 @@
       list.appendChild(opt);
     });
 
-    ['saleBuyerName','saleBottles','salePrice','salePaid','saleRemark'].forEach(id => {
+    ['saleBuyerName','saleBottles','salePrice','salePaid','saleRemark','saleWhatsapp'].forEach(id => {
       document.getElementById(id).value = '';
     });
     document.getElementById('saleTotalDisplay').textContent = 'Rs. 0';
@@ -1346,6 +1283,9 @@
     const btn = document.getElementById('saleSubmitBtn');
     btn.disabled = false;
     btn.textContent = 'Create Sale';
+    const waBtn = document.getElementById('saleWhatsappBtn');
+    waBtn.disabled = false;
+    waBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.44.79 3.06 1.2 4.7 1.2h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.05 2h-.01zm5.8 14.13c-.24.68-1.4 1.32-1.94 1.4-.5.08-1.12.11-1.81-.11-.42-.13-.95-.31-1.64-.6-2.88-1.24-4.76-4.14-4.9-4.33-.14-.19-1.18-1.57-1.18-3 0-1.42.75-2.13 1.01-2.42.27-.29.58-.36.77-.36.19 0 .39 0 .55.01.18.01.42-.07.65.5.24.58.82 2 .89 2.15.07.15.12.32.02.51-.09.19-.14.31-.28.48-.14.16-.29.36-.42.49-.14.13-.28.28-.12.55.16.27.72 1.19 1.55 1.93 1.06.95 1.96 1.24 2.23 1.38.27.14.43.12.59-.07.16-.19.68-.79.86-1.06.18-.27.36-.22.6-.13.24.09 1.53.72 1.79.85.26.13.44.19.5.3.06.11.06.63-.18 1.31z"/></svg> Save & Send';
 
     overlay.classList.add('open');
   }
@@ -1374,46 +1314,104 @@
     box.className = 'modal-msg ' + type;
   }
 
-  document.getElementById('saleSubmitBtn').addEventListener('click', async () => {
-    const buyerName = document.getElementById('saleBuyerName').value.trim();
-    const bottles = document.getElementById('saleBottles').value;
-    const price = document.getElementById('salePrice').value;
-    const paid = document.getElementById('salePaid').value || 0;
-    const remark = document.getElementById('saleRemark').value.trim();
+  function readSaleForm(){
+    return {
+      buyerName: document.getElementById('saleBuyerName').value.trim(),
+      bottles: document.getElementById('saleBottles').value,
+      price: document.getElementById('salePrice').value,
+      paid: document.getElementById('salePaid').value || 0,
+      remark: document.getElementById('saleRemark').value.trim(),
+      whatsapp: document.getElementById('saleWhatsapp').value.trim()
+    };
+  }
 
-    if (!buyerName) { showSaleMsg('Please enter a buyer name.', 'error'); return; }
-    if (!bottles || Number(bottles) <= 0) { showSaleMsg('Please enter number of bottles.', 'error'); return; }
-    if (!price || Number(price) <= 0) { showSaleMsg('Please enter price per bottle.', 'error'); return; }
+  function validateSaleForm(f){
+    if (!f.buyerName) return 'Please enter a buyer name.';
+    if (!f.bottles || Number(f.bottles) <= 0) return 'Please enter number of bottles.';
+    if (!f.price || Number(f.price) <= 0) return 'Please enter price per bottle.';
+    return null;
+  }
+
+  // Does the actual save (POST to Apps Script). Returns the response data or throws.
+  async function submitSaleToSheet(f){
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({
+        action: 'createSale',
+        payload: { buyerName: f.buyerName, bottles: f.bottles, price: f.price, paid: f.paid, remark: f.remark }
+      })
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || 'Could not create the sale.');
+    return data;
+  }
+
+  function normalizeWhatsAppNumber(raw){
+    let n = (raw || '').replace(/[^\d]/g, '');
+    if (!n) return '';
+    if (n.startsWith('0')) n = '94' + n.slice(1);          // local Sri Lanka format -> country code
+    else if (n.length === 9 && !n.startsWith('94')) n = '94' + n; // missing leading 0 and country code
+    return n;
+  }
+
+  function buildInvoiceMessage(f, data){
+    const today = new Date().toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+    return `🐐 *Moofresh Hanoon*\n─────────────────\n\nHi ${f.buyerName},\n\nHere's your delivery invoice:\n\n📅 Date: ${today}\n🍼 Bottles: ${f.bottles}\n💰 Price/Bottle: Rs. ${Number(f.price).toLocaleString('en-IN')}\n\n*Total Amount: ${fmtSaleModal(data.total)}*\n✅ Paid: ${fmtSaleModal(f.paid)}\n⏳ *Balance Due: ${fmtSaleModal(data.balance)}*\n\nThank you for your business! 🙏`;
+  }
+
+  document.getElementById('saleSubmitBtn').addEventListener('click', async () => {
+    const f = readSaleForm();
+    const err = validateSaleForm(f);
+    if (err) { showSaleMsg(err, 'error'); return; }
 
     const btn = document.getElementById('saleSubmitBtn');
     btn.disabled = true;
     btn.textContent = 'Creating...';
 
     try {
-      // Content-Type text/plain avoids a CORS preflight to the Apps Script web app.
-      const res = await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({
-          action: 'createSale',
-          payload: { buyerName, bottles, price, paid, remark }
-        })
-      });
-      const data = await res.json();
-
-      if (!data.success) throw new Error(data.error || 'Could not create the sale.');
-
+      const data = await submitSaleToSheet(f);
       showSaleMsg('Sale created! Total ' + fmtSaleModal(data.total) + ', balance ' + fmtSaleModal(data.balance) + '.', 'success');
 
-      // refresh dashboard data from the sheet
       const fresh = await fetch(API_URL).then(r => r.json());
       processData(fresh.buyers || [], fresh.sales || []);
 
       setTimeout(closeSaleModal, 1300);
-    } catch (err) {
+    } catch (e) {
       btn.disabled = false;
       btn.textContent = 'Create Sale';
-      showSaleMsg(err.message || 'Something went wrong. Please try again.', 'error');
+      showSaleMsg(e.message || 'Something went wrong. Please try again.', 'error');
+    }
+  });
+
+  document.getElementById('saleWhatsappBtn').addEventListener('click', async () => {
+    const f = readSaleForm();
+    const err = validateSaleForm(f);
+    if (err) { showSaleMsg(err, 'error'); return; }
+    if (!f.whatsapp) { showSaleMsg('Enter a WhatsApp number to send the invoice.', 'error'); return; }
+
+    const waNumber = normalizeWhatsAppNumber(f.whatsapp);
+    if (waNumber.length < 11) { showSaleMsg('That WhatsApp number looks incomplete.', 'error'); return; }
+
+    const btn = document.getElementById('saleWhatsappBtn');
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+
+    try {
+      const data = await submitSaleToSheet(f);
+      showSaleMsg('Sale created! Opening WhatsApp…', 'success');
+
+      const fresh = await fetch(API_URL).then(r => r.json());
+      processData(fresh.buyers || [], fresh.sales || []);
+
+      const message = buildInvoiceMessage(f, data);
+      window.open('https://wa.me/' + waNumber + '?text=' + encodeURIComponent(message), '_blank');
+
+      setTimeout(closeSaleModal, 1300);
+    } catch (e) {
+      btn.disabled = false;
+      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.44.79 3.06 1.2 4.7 1.2h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.05 2h-.01zm5.8 14.13c-.24.68-1.4 1.32-1.94 1.4-.5.08-1.12.11-1.81-.11-.42-.13-.95-.31-1.64-.6-2.88-1.24-4.76-4.14-4.9-4.33-.14-.19-1.18-1.57-1.18-3 0-1.42.75-2.13 1.01-2.42.27-.29.58-.36.77-.36.19 0 .39 0 .55.01.18.01.42-.07.65.5.24.58.82 2 .89 2.15.07.15.12.32.02.51-.09.19-.14.31-.28.48-.14.16-.29.36-.42.49-.14.13-.28.28-.12.55.16.27.72 1.19 1.55 1.93 1.06.95 1.96 1.24 2.23 1.38.27.14.43.12.59-.07.16-.19.68-.79.86-1.06.18-.27.36-.22.6-.13.24.09 1.53.72 1.79.85.26.13.44.19.5.3.06.11.06.63-.18 1.31z"/></svg> Save & Send';
+      showSaleMsg(e.message || 'Something went wrong. Please try again.', 'error');
     }
   });
 
@@ -1427,11 +1425,6 @@
       window.scrollTo({top:0, behavior:'smooth'});
     });
   });
-
-  // ---- PWA: register service worker so the app is installable ----
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js').catch(() => {});
-  }
 </script>
 
 </body>
