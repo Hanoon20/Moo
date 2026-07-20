@@ -453,6 +453,37 @@
     animation: spin .8s linear infinite;
   }
 
+  /* ---------- MILK POUR LOADER ---------- */
+  .milk-pour-wrap{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+  }
+  .milk-pour-svg{ width:64px; height:46px; overflow:visible; }
+  .milk-drop{
+    animation: milkDropFall 1.4s ease-in infinite;
+    opacity:0;
+  }
+  .milk-drop.d2{ animation-delay:.35s; }
+  .milk-drop.d3{ animation-delay:.7s; }
+  @keyframes milkDropFall{
+    0%   { transform: translateY(0); opacity:0; }
+    15%  { opacity:1; }
+    75%  { opacity:1; }
+    100% { transform: translateY(16px); opacity:0; }
+  }
+  .milk-fill-rect{
+    transform-origin: bottom;
+    animation: milkFillGlass 1.4s ease-in-out infinite;
+  }
+  @keyframes milkFillGlass{
+    0%   { transform: scaleY(0); }
+    55%  { transform: scaleY(1); }
+    80%  { transform: scaleY(1); }
+    100% { transform: scaleY(0); }
+  }
+
   /* ---------- FAB (New Sale button) ---------- */
   .fab{
     position:fixed;
@@ -659,7 +690,27 @@
     </div>
     <input type="text" class="connect-input" id="apiUrlInput" placeholder="https://script.google.com/macros/s/.../exec">
     <button class="connect-btn" id="connectBtn">Connect &amp; Load</button>
-    <div class="connect-loading" id="connectLoading"><div class="spinner"></div><span>Loading your data…</span></div>
+    <div class="connect-loading" id="connectLoading">
+      <div class="milk-pour-wrap">
+        <svg class="milk-pour-svg" viewBox="0 0 100 70" xmlns="http://www.w3.org/2000/svg">
+          <g transform="translate(12,4) rotate(-25)">
+            <rect x="0" y="10" width="16" height="26" rx="4" fill="#1E3A2B"/>
+            <rect x="4" y="0" width="8" height="11" rx="2" fill="#1E3A2B"/>
+          </g>
+          <circle class="milk-drop d1" cx="36" cy="18" r="2" fill="#FDFBF5"/>
+          <circle class="milk-drop d2" cx="38" cy="18" r="2" fill="#FDFBF5"/>
+          <circle class="milk-drop d3" cx="40" cy="18" r="2" fill="#FDFBF5"/>
+          <g transform="translate(52,22)">
+            <path d="M2 0 H26 L22 32 H6 Z" fill="none" stroke="#E6DDC9" stroke-width="2"/>
+            <clipPath id="glassClipLoader"><path d="M2 0 H26 L22 32 H6 Z"/></clipPath>
+            <g clip-path="url(#glassClipLoader)">
+              <rect class="milk-fill-rect" x="2" y="4" width="24" height="28" fill="#FDFBF5"/>
+            </g>
+          </g>
+        </svg>
+      </div>
+      <span>Loading your data…</span>
+    </div>
     <div class="connect-error" id="connectError">Couldn't reach that URL. Check the link and that the deployment access is set to "Anyone".</div>
     <div class="connect-demo" id="demoLink">Just exploring? View with sample data</div>
   </div>
@@ -1425,26 +1476,19 @@
     return n;
   }
 
-  // Emoji written as \u{...} escapes so the message survives being re-saved
-  // in a non-UTF-8 editor (Notepad ANSI, etc.) without turning into "?"
-  const EMOJI = {
-    goat: '\u{1F410}', calendar: '\u{1F4C5}', bottle: '\u{1F37C}', money: '\u{1F4B0}',
-    check: '\u{2705}', hourglass: '\u{231B}', pray: '\u{1F64F}', phone: '\u{1F4DE}',
-    cash: '\u{1F4B5}', receipt: '\u{1F9FE}'
-  };
-  const BUSINESS_TITLE = 'Moofresh Goatmilk';
+  const BUSINESS_TITLE = 'MOOFRESH GOATMILK';
   const SUPPLIER_NAME = 'Hanoon';
   const CONTACT_NUMBER = '0716903578';
-  const CONTACT_FOOTER = `${EMOJI.phone} Contact ${SUPPLIER_NAME}: ${CONTACT_NUMBER} if you have any questions.`;
+  const CONTACT_FOOTER = `For any queries, contact ${SUPPLIER_NAME}: ${CONTACT_NUMBER}`;
 
   function buildInvoiceMessage(f, data){
     const today = new Date().toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
-    return `${EMOJI.goat} *${BUSINESS_TITLE}*\nSupplier: ${SUPPLIER_NAME}\n-----------------\n\nHi ${f.buyerName},\n\nHere's your delivery invoice:\n\n${EMOJI.calendar} Date: ${today}\n${EMOJI.bottle} Bottles: ${f.bottles}\n${EMOJI.money} Price/Bottle: Rs. ${Number(f.price).toLocaleString('en-IN')}\n\n*Total Amount: ${fmtSaleModal(data.total)}*\n${EMOJI.check} Paid: ${fmtSaleModal(f.paid)}\n${EMOJI.hourglass} *Balance Due: ${fmtSaleModal(data.balance)}*\n\nThank you for your business! ${EMOJI.pray}\n\n${CONTACT_FOOTER}`;
+    return `*${BUSINESS_TITLE}*\nSupplier: ${SUPPLIER_NAME}\n------------------------\n\nHi ${f.buyerName},\n\nYour delivery invoice details:\n\nDate: ${today}\nBottles: ${f.bottles}\nPrice per Bottle: Rs. ${Number(f.price).toLocaleString('en-IN')}\n\nTotal Amount: ${fmtSaleModal(data.total)}\nAmount Paid: ${fmtSaleModal(f.paid)}\nBalance Due: ${fmtSaleModal(data.balance)}\n\nThank you for your business.\n\n${CONTACT_FOOTER}`;
   }
 
-  function buildPaymentReceiptMessage(buyerName, appliedAmount, remainingBalance, lastBillAmount){
+  function buildPaymentReceiptMessage(buyerName, appliedAmount, remainingBalance){
     const today = new Date().toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
-    return `${EMOJI.goat} *${BUSINESS_TITLE}*\nSupplier: ${SUPPLIER_NAME}\n-----------------\n\nHi ${buyerName},\n\n${EMOJI.receipt} Payment received - thank you!\n\n${EMOJI.calendar} Payment Date: ${today}\n${EMOJI.cash} Amount Paid: ${fmtSaleModal(appliedAmount)}\n${EMOJI.hourglass} *Remaining Balance: ${fmtSaleModal(remainingBalance)}*\n\nWe appreciate your business! ${EMOJI.pray}\n\n${CONTACT_FOOTER}`;
+    return `*${BUSINESS_TITLE}*\nSupplier: ${SUPPLIER_NAME}\n------------------------\n\nHi ${buyerName},\n\nPayment Received\n\nDate: ${today}\nAmount Paid: ${fmtSaleModal(appliedAmount)}\nRemaining Balance: ${fmtSaleModal(remainingBalance)}\n\nWe appreciate your business.\n\n${CONTACT_FOOTER}`;
   }
 
   document.getElementById('saleSubmitBtn').addEventListener('click', async () => {
