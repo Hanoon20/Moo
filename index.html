@@ -858,12 +858,19 @@
       <div class="field-label">Amount Received (Rs.)</div>
       <input type="number" class="field-input" id="payAmount" min="1" step="0.01" placeholder="e.g. 5000">
 
+      <div class="field-label">WhatsApp Number (optional)</div>
+      <input type="tel" class="field-input" id="payWhatsapp" placeholder="e.g. 0771234567">
+
       <div class="modal-msg" id="payMsgBox"></div>
 
       <div class="modal-btn-row">
         <button id="payCancelBtn" type="button">Cancel</button>
         <button id="paySubmitBtn" type="button">Record Payment</button>
       </div>
+      <button id="payWhatsappBtn" type="button" class="whatsapp-btn">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.44.79 3.06 1.2 4.7 1.2h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.05 2h-.01zm5.8 14.13c-.24.68-1.4 1.32-1.94 1.4-.5.08-1.12.11-1.81-.11-.42-.13-.95-.31-1.64-.6-2.88-1.24-4.76-4.14-4.9-4.33-.14-.19-1.18-1.57-1.18-3 0-1.42.75-2.13 1.01-2.42.27-.29.58-.36.77-.36.19 0 .39 0 .55.01.18.01.42-.07.65.5.24.58.82 2 .89 2.15.07.15.12.32.02.51-.09.19-.14.31-.28.48-.14.16-.29.36-.42.49-.14.13-.28.28-.12.55.16.27.72 1.19 1.55 1.93 1.06.95 1.96 1.24 2.23 1.38.27.14.43.12.59-.07.16-.19.68-.79.86-1.06.18-.27.36-.22.6-.13.24.09 1.53.72 1.79.85.26.13.44.19.5.3.06.11.06.63-.18 1.31z"/></svg>
+        Save &amp; Send
+      </button>
     </div>
   </div>
 
@@ -1133,6 +1140,7 @@
   // ============================================================
   const payOverlay = document.getElementById('payModalOverlay');
   let payTargetBuyer = '';
+  let payTargetDue = 0;
 
   function openPayModal(buyerName, dueAmount){
     if (!API_URL) {
@@ -1140,14 +1148,21 @@
       return;
     }
     payTargetBuyer = buyerName;
+    payTargetDue = dueAmount;
     document.getElementById('payBuyerLine').textContent = buyerName;
     document.getElementById('payDueDisplay').textContent = fmtSaleModal(dueAmount);
     document.getElementById('payAmount').value = '';
+
+    const buyerRecord = ledger.find(b => b.name === buyerName);
+    document.getElementById('payWhatsapp').value = (buyerRecord && buyerRecord.whatsapp) || '';
+
     document.getElementById('payMsgBox').className = 'modal-msg';
     document.getElementById('payMsgBox').textContent = '';
     const btn = document.getElementById('paySubmitBtn');
     btn.disabled = false;
     btn.textContent = 'Record Payment';
+    const waBtn = document.getElementById('payWhatsappBtn');
+    waBtn.disabled = false;
     payOverlay.classList.add('open');
   }
   function closePayModal(){ payOverlay.classList.remove('open'); }
@@ -1159,6 +1174,20 @@
     const box = document.getElementById('payMsgBox');
     box.textContent = text;
     box.className = 'modal-msg ' + type;
+  }
+
+  async function submitPaymentToSheet(amount){
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({
+        action: 'recordPayment',
+        payload: { buyerName: payTargetBuyer, amount: amount }
+      })
+    });
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error || 'Could not record the payment.');
+    return data;
   }
 
   document.getElementById('paySubmitBtn').addEventListener('click', async () => {
@@ -1173,17 +1202,7 @@
     btn.textContent = 'Recording...';
 
     try {
-      const res = await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({
-          action: 'recordPayment',
-          payload: { buyerName: payTargetBuyer, amount: amount }
-        })
-      });
-      const data = await res.json();
-      if (!data.success) throw new Error(data.error || 'Could not record the payment.');
-
+      const data = await submitPaymentToSheet(amount);
       showPayMsg('Payment recorded! Applied ' + fmtSaleModal(data.appliedAmount) + '.', 'success');
 
       const fresh = await fetch(API_URL).then(r => r.json());
@@ -1193,6 +1212,40 @@
     } catch (err) {
       btn.disabled = false;
       btn.textContent = 'Record Payment';
+      showPayMsg(err.message || 'Something went wrong. Please try again.', 'error');
+    }
+  });
+
+  document.getElementById('payWhatsappBtn').addEventListener('click', async () => {
+    const amount = document.getElementById('payAmount').value;
+    if (!amount || Number(amount) <= 0) {
+      showPayMsg('Please enter a valid amount.', 'error');
+      return;
+    }
+    const waNumberRaw = document.getElementById('payWhatsapp').value.trim();
+    if (!waNumberRaw) { showPayMsg('Enter a WhatsApp number to send the receipt.', 'error'); return; }
+    const waNumber = normalizeWhatsAppNumber(waNumberRaw);
+    if (waNumber.length < 11) { showPayMsg('That WhatsApp number looks incomplete.', 'error'); return; }
+
+    const btn = document.getElementById('payWhatsappBtn');
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+
+    try {
+      const data = await submitPaymentToSheet(amount);
+      showPayMsg('Payment recorded! Opening WhatsApp\u2026', 'success');
+
+      const fresh = await fetch(API_URL).then(r => r.json());
+      processData(fresh.buyers || [], fresh.sales || []);
+
+      const remainingBalance = Math.max(0, payTargetDue - data.appliedAmount);
+      const message = buildPaymentReceiptMessage(payTargetBuyer, data.appliedAmount, remainingBalance);
+      window.open('https://wa.me/' + waNumber + '?text=' + encodeURIComponent(message), '_blank');
+
+      setTimeout(closePayModal, 1300);
+    } catch (err) {
+      btn.disabled = false;
+      btn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.44.79 3.06 1.2 4.7 1.2h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.05 2h-.01zm5.8 14.13c-.24.68-1.4 1.32-1.94 1.4-.5.08-1.12.11-1.81-.11-.42-.13-.95-.31-1.64-.6-2.88-1.24-4.76-4.14-4.9-4.33-.14-.19-1.18-1.57-1.18-3 0-1.42.75-2.13 1.01-2.42.27-.29.58-.36.77-.36.19 0 .39 0 .55.01.18.01.42-.07.65.5.24.58.82 2 .89 2.15.07.15.12.32.02.51-.09.19-.14.31-.28.48-.14.16-.29.36-.42.49-.14.13-.28.28-.12.55.16.27.72 1.19 1.55 1.93 1.06.95 1.96 1.24 2.23 1.38.27.14.43.12.59-.07.16-.19.68-.79.86-1.06.18-.27.36-.22.6-.13.24.09 1.53.72 1.79.85.26.13.44.19.5.3.06.11.06.63-.18 1.31z"/></svg> Save & Send';
       showPayMsg(err.message || 'Something went wrong. Please try again.', 'error');
     }
   });
@@ -1276,6 +1329,7 @@
     ['saleBuyerName','saleBottles','salePrice','salePaid','saleRemark','saleWhatsapp'].forEach(id => {
       document.getElementById(id).value = '';
     });
+    delete document.getElementById('saleWhatsapp').dataset.userEdited;
     document.getElementById('saleTotalDisplay').textContent = 'Rs. 0';
     document.getElementById('saleBalanceDisplay').textContent = 'Rs. 0';
     document.getElementById('saleMsgBox').className = 'modal-msg';
@@ -1293,6 +1347,22 @@
   function closeSaleModal(){ overlay.classList.remove('open'); }
 
   document.getElementById('fabNewSale').addEventListener('click', openSaleModal);
+
+  // Auto-fill WhatsApp number when the typed/selected buyer already has one saved
+  document.getElementById('saleBuyerName').addEventListener('input', () => {
+    const name = document.getElementById('saleBuyerName').value.trim().toLowerCase();
+    const match = buyers.find(b => (b.name || '').trim().toLowerCase() === name);
+    const waField = document.getElementById('saleWhatsapp');
+    if (match && match.whatsapp) {
+      waField.value = match.whatsapp;
+    } else if (!waField.dataset.userEdited) {
+      waField.value = '';
+    }
+  });
+  // track manual edits so we don't stomp on a number the user is typing for a new buyer
+  document.getElementById('saleWhatsapp').addEventListener('input', function(){
+    this.dataset.userEdited = 'true';
+  });
   document.getElementById('saleCancelBtn').addEventListener('click', closeSaleModal);
   overlay.addEventListener('click', (e) => { if (e.target === overlay) closeSaleModal(); });
 
@@ -1355,9 +1425,26 @@
     return n;
   }
 
+  // Emoji written as \u{...} escapes so the message survives being re-saved
+  // in a non-UTF-8 editor (Notepad ANSI, etc.) without turning into "?"
+  const EMOJI = {
+    goat: '\u{1F410}', calendar: '\u{1F4C5}', bottle: '\u{1F37C}', money: '\u{1F4B0}',
+    check: '\u{2705}', hourglass: '\u{231B}', pray: '\u{1F64F}', phone: '\u{1F4DE}',
+    cash: '\u{1F4B5}', receipt: '\u{1F9FE}'
+  };
+  const BUSINESS_TITLE = 'Moofresh Goatmilk';
+  const SUPPLIER_NAME = 'Hanoon';
+  const CONTACT_NUMBER = '0716903578';
+  const CONTACT_FOOTER = `${EMOJI.phone} Contact ${SUPPLIER_NAME}: ${CONTACT_NUMBER} if you have any questions.`;
+
   function buildInvoiceMessage(f, data){
     const today = new Date().toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
-    return `🐐 *Moofresh Hanoon*\n─────────────────\n\nHi ${f.buyerName},\n\nHere's your delivery invoice:\n\n📅 Date: ${today}\n🍼 Bottles: ${f.bottles}\n💰 Price/Bottle: Rs. ${Number(f.price).toLocaleString('en-IN')}\n\n*Total Amount: ${fmtSaleModal(data.total)}*\n✅ Paid: ${fmtSaleModal(f.paid)}\n⏳ *Balance Due: ${fmtSaleModal(data.balance)}*\n\nThank you for your business! 🙏`;
+    return `${EMOJI.goat} *${BUSINESS_TITLE}*\nSupplier: ${SUPPLIER_NAME}\n-----------------\n\nHi ${f.buyerName},\n\nHere's your delivery invoice:\n\n${EMOJI.calendar} Date: ${today}\n${EMOJI.bottle} Bottles: ${f.bottles}\n${EMOJI.money} Price/Bottle: Rs. ${Number(f.price).toLocaleString('en-IN')}\n\n*Total Amount: ${fmtSaleModal(data.total)}*\n${EMOJI.check} Paid: ${fmtSaleModal(f.paid)}\n${EMOJI.hourglass} *Balance Due: ${fmtSaleModal(data.balance)}*\n\nThank you for your business! ${EMOJI.pray}\n\n${CONTACT_FOOTER}`;
+  }
+
+  function buildPaymentReceiptMessage(buyerName, appliedAmount, remainingBalance, lastBillAmount){
+    const today = new Date().toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+    return `${EMOJI.goat} *${BUSINESS_TITLE}*\nSupplier: ${SUPPLIER_NAME}\n-----------------\n\nHi ${buyerName},\n\n${EMOJI.receipt} Payment received - thank you!\n\n${EMOJI.calendar} Payment Date: ${today}\n${EMOJI.cash} Amount Paid: ${fmtSaleModal(appliedAmount)}\n${EMOJI.hourglass} *Remaining Balance: ${fmtSaleModal(remainingBalance)}*\n\nWe appreciate your business! ${EMOJI.pray}\n\n${CONTACT_FOOTER}`;
   }
 
   document.getElementById('saleSubmitBtn').addEventListener('click', async () => {
