@@ -1570,8 +1570,10 @@ newOrderOverlay.addEventListener('click', (e) => { if (e.target === newOrderOver
     btn.disabled = true;
     btn.textContent = 'Creating...';
 
-    try {
+   try {
       const data = await submitSaleToSheet(f);
+      pendingOrders = pendingOrders.filter(o => normName(o.buyerName) !== normName(f.buyerName));
+      renderPendingOrders();
       showSaleMsg('Sale created! Total ' + fmtSaleModal(data.total) + ', balance ' + fmtSaleModal(data.balance) + '.', 'success');
 
       const fresh = await fetch(API_URL).then(r => r.json());
@@ -1600,6 +1602,8 @@ newOrderOverlay.addEventListener('click', (e) => { if (e.target === newOrderOver
 
     try {
       const data = await submitSaleToSheet(f);
+      pendingOrders = pendingOrders.filter(o => normName(o.buyerName) !== normName(f.buyerName));
+      renderPendingOrders();
       showSaleMsg('Sale created! Opening WhatsApp…', 'success');
 
       const fresh = await fetch(API_URL).then(r => r.json());
