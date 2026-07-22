@@ -816,6 +816,12 @@
         <div class="section-count" id="followupCount">0</div>
       </div>
       <div class="buyer-list" id="followupList"></div>
+      <div class="section-head">
+      <div class="section-title">New Orders</div>
+        </div>
+        <div style="margin:0 22px;">
+          <button class="pay-btn" id="newOrderBtn" style="width:100%;padding:12px;">+ New Order</button>
+        </div>
 
       <div class="footnote">Pull up Buyers or Sales below for full detail</div>
     </div>
@@ -933,6 +939,21 @@
       </button>
     </div>
   </div>
+
+  <div class="modal-overlay" id="newOrderModalOverlay">
+  <div class="modal-sheet">
+    <div class="modal-title">📝 New Order</div>
+    <div class="field-label">Buyer Name</div>
+    <input type="text" class="field-input" id="orderBuyerName" list="saleBuyerList" placeholder="Type or pick a buyer" autocomplete="off">
+    <div class="field-label">Quantity (bottles)</div>
+    <input type="number" class="field-input" id="orderQty" min="1" step="1" placeholder="e.g. 50">
+    <div class="modal-msg" id="orderMsgBox"></div>
+    <div class="modal-btn-row">
+      <button id="orderCancelBtn" type="button">Cancel</button>
+      <button id="orderSubmitBtn" type="button">Save Order</button>
+    </div>
+  </div>
+</div>
 
   <div class="modal-overlay" id="payModalOverlay">
     <div class="modal-sheet">
@@ -1431,6 +1452,20 @@
   }
 
   function closeSaleModal(){ overlay.classList.remove('open'); }
+
+  const newOrderOverlay = document.getElementById('newOrderModalOverlay');
+function openNewOrderModal(){
+  document.getElementById('orderBuyerName').value = '';
+  document.getElementById('orderQty').value = '';
+  document.getElementById('orderMsgBox').className = 'modal-msg';
+  document.getElementById('orderMsgBox').textContent = '';
+  newOrderOverlay.classList.add('open');
+}
+function closeNewOrderModal(){ newOrderOverlay.classList.remove('open'); }
+
+document.getElementById('newOrderBtn').addEventListener('click', openNewOrderModal);
+document.getElementById('orderCancelBtn').addEventListener('click', closeNewOrderModal);
+newOrderOverlay.addEventListener('click', (e) => { if (e.target === newOrderOverlay) closeNewOrderModal(); });
 
   document.getElementById('fabNewSale').addEventListener('click', openSaleModal);
 
