@@ -186,6 +186,44 @@
     align-items:baseline;
     margin: 26px 22px 12px;
   }
+  .add-upcoming-btn{
+    width:26px; height:26px;
+    border-radius:8px;
+    border:1px solid var(--line);
+    background: var(--cream-card);
+    color: var(--bottle-green);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+  }
+  .add-upcoming-btn svg{ width:14px; height:14px; }
+  .upcoming-card{
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  .upcoming-remove-btn{
+    flex-shrink:0;
+    width:30px; height:30px;
+    border-radius:9px;
+    border:1px solid var(--line);
+    background: var(--cream-card);
+    color: var(--ink-soft);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+  }
+  .upcoming-remove-btn svg{ width:13px; height:13px; }
+  .upcoming-use-btn{
+    flex-shrink:0;
+    padding:9px 14px;
+    border-radius:10px;
+    border:none;
+    background: var(--brass);
+    color:#fff;
+    font-size:12px;
+    font-weight:600;
+    cursor:pointer;
+    font-family:'Work Sans', sans-serif;
+  }
   .section-title{
     font-family:'Fraunces', serif;
     font-size:18px;
@@ -817,6 +855,14 @@
       </div>
       <div class="buyer-list" id="followupList"></div>
 
+      <div class="section-head" style="margin-top:22px;">
+        <div class="section-title">Upcoming Orders</div>
+        <button class="add-upcoming-btn" id="addUpcomingBtn" title="Add upcoming order">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+      </div>
+      <div class="buyer-list" id="upcomingList"></div>
+
       <div class="footnote">Pull up Buyers or Sales below for full detail</div>
     </div>
 
@@ -957,6 +1003,27 @@
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.44.79 3.06 1.2 4.7 1.2h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.05 2h-.01zm5.8 14.13c-.24.68-1.4 1.32-1.94 1.4-.5.08-1.12.11-1.81-.11-.42-.13-.95-.31-1.64-.6-2.88-1.24-4.76-4.14-4.9-4.33-.14-.19-1.18-1.57-1.18-3 0-1.42.75-2.13 1.01-2.42.27-.29.58-.36.77-.36.19 0 .39 0 .55.01.18.01.42-.07.65.5.24.58.82 2 .89 2.15.07.15.12.32.02.51-.09.19-.14.31-.28.48-.14.16-.29.36-.42.49-.14.13-.28.28-.12.55.16.27.72 1.19 1.55 1.93 1.06.95 1.96 1.24 2.23 1.38.27.14.43.12.59-.07.16-.19.68-.79.86-1.06.18-.27.36-.22.6-.13.24.09 1.53.72 1.79.85.26.13.44.19.5.3.06.11.06.63-.18 1.31z"/></svg>
         Save &amp; Send
       </button>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="upcomingModalOverlay">
+    <div class="modal-sheet">
+      <div class="modal-title">Upcoming Order</div>
+      <div class="modal-sub">A quick reminder for a planned order — not saved to the sheet yet.</div>
+
+      <div class="field-label">Buyer Name</div>
+      <input type="text" class="field-input" id="upcomingBuyerName" list="upcomingBuyerList" placeholder="Type or pick a buyer" autocomplete="off">
+      <datalist id="upcomingBuyerList"></datalist>
+
+      <div class="field-label">Bottles Qty</div>
+      <input type="number" class="field-input" id="upcomingBottles" min="1" step="1" placeholder="e.g. 50">
+
+      <div class="modal-msg" id="upcomingMsgBox"></div>
+
+      <div class="modal-btn-row">
+        <button id="upcomingCancelBtn" type="button">Cancel</button>
+        <button id="upcomingSaveBtn" type="button">Add to List</button>
+      </div>
     </div>
   </div>
 
@@ -1384,6 +1451,8 @@
     }
   });
 
+  renderUpcomingOrders();
+
   // ---- Auto-connect if a default URL is configured ----
   if (DEFAULT_API_URL && DEFAULT_API_URL.trim()) {
     document.getElementById('apiUrlInput').value = DEFAULT_API_URL.trim();
@@ -1396,7 +1465,9 @@
   const overlay = document.getElementById('saleModalOverlay');
   const fmtSaleModal = n => 'Rs. ' + Math.round(n || 0).toLocaleString('en-IN');
 
-  function openSaleModal(){
+  let saleFromUpcomingId = null;
+
+  function openSaleModal(prefill){
     if (!API_URL) {
       alert('Connect your sheet first (see the Connect screen) before creating a sale.');
       return;
@@ -1416,6 +1487,16 @@
       document.getElementById(id).value = '';
     });
     delete document.getElementById('saleWhatsapp').dataset.userEdited;
+
+    saleFromUpcomingId = null;
+    if (prefill) {
+      document.getElementById('saleBuyerName').value = prefill.buyerName || '';
+      document.getElementById('saleBottles').value = prefill.bottles || '';
+      saleFromUpcomingId = prefill.upcomingId || null;
+      // trigger whatsapp autofill for the prefilled buyer
+      document.getElementById('saleBuyerName').dispatchEvent(new Event('input'));
+    }
+
     document.getElementById('saleTotalDisplay').textContent = 'Rs. 0';
     document.getElementById('saleBalanceDisplay').textContent = 'Rs. 0';
     document.getElementById('saleMsgBox').className = 'modal-msg';
@@ -1541,6 +1622,7 @@
 
       const fresh = await fetch(API_URL).then(r => r.json());
       processData(fresh.buyers || [], fresh.sales || []);
+      removeUpcomingOrder(saleFromUpcomingId);
 
       setTimeout(closeSaleModal, 1300);
     } catch (e) {
@@ -1569,6 +1651,7 @@
 
       const fresh = await fetch(API_URL).then(r => r.json());
       processData(fresh.buyers || [], fresh.sales || []);
+      removeUpcomingOrder(saleFromUpcomingId);
 
       const message = buildInvoiceMessage(f, data);
       window.open('https://wa.me/' + waNumber + '?text=' + encodeURIComponent(message), '_blank');
@@ -1579,6 +1662,89 @@
       btn.innerHTML = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.44.79 3.06 1.2 4.7 1.2h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.05 2h-.01zm5.8 14.13c-.24.68-1.4 1.32-1.94 1.4-.5.08-1.12.11-1.81-.11-.42-.13-.95-.31-1.64-.6-2.88-1.24-4.76-4.14-4.9-4.33-.14-.19-1.18-1.57-1.18-3 0-1.42.75-2.13 1.01-2.42.27-.29.58-.36.77-.36.19 0 .39 0 .55.01.18.01.42-.07.65.5.24.58.82 2 .89 2.15.07.15.12.32.02.51-.09.19-.14.31-.28.48-.14.16-.29.36-.42.49-.14.13-.28.28-.12.55.16.27.72 1.19 1.55 1.93 1.06.95 1.96 1.24 2.23 1.38.27.14.43.12.59-.07.16-.19.68-.79.86-1.06.18-.27.36-.22.6-.13.24.09 1.53.72 1.79.85.26.13.44.19.5.3.06.11.06.63-.18 1.31z"/></svg> Save & Send';
       showSaleMsg(e.message || 'Something went wrong. Please try again.', 'error');
     }
+  });
+
+  // ============================================================
+  //  UPCOMING ORDERS — lightweight, in-memory planning list.
+  //  Resets on page reload by design (these are reminders, not
+  //  saved to the sheet until turned into an actual sale).
+  // ============================================================
+  let upcomingOrders = [];
+  let upcomingIdCounter = 1;
+
+  function renderUpcomingOrders(){
+    const listEl = document.getElementById('upcomingList');
+    if (upcomingOrders.length === 0) {
+      listEl.innerHTML = '<div class="empty-state">No upcoming orders planned yet.</div>';
+      return;
+    }
+    listEl.innerHTML = upcomingOrders.map(o => `
+      <div class="buyer-card upcoming-card">
+        <div class="buyer-avatar">${initials(o.buyerName)}</div>
+        <div class="buyer-info">
+          <div class="buyer-name">${o.buyerName}</div>
+          <div class="buyer-meta">${o.bottles} bottles planned</div>
+        </div>
+        <button class="upcoming-use-btn" data-id="${o.id}">Use</button>
+        <button class="upcoming-remove-btn" data-id="${o.id}" title="Remove">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+    `).join('');
+
+    listEl.querySelectorAll('.upcoming-use-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const o = upcomingOrders.find(x => String(x.id) === btn.dataset.id);
+        if (!o) return;
+        openSaleModal({ buyerName: o.buyerName, bottles: o.bottles, upcomingId: o.id });
+      });
+    });
+    listEl.querySelectorAll('.upcoming-remove-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        removeUpcomingOrder(btn.dataset.id);
+      });
+    });
+  }
+
+  function removeUpcomingOrder(id){
+    if (id == null) return;
+    upcomingOrders = upcomingOrders.filter(o => String(o.id) !== String(id));
+    renderUpcomingOrders();
+  }
+
+  const upcomingOverlay = document.getElementById('upcomingModalOverlay');
+
+  function openUpcomingModal(){
+    const list = document.getElementById('upcomingBuyerList');
+    list.innerHTML = '';
+    buyers.forEach(b => {
+      const opt = document.createElement('option');
+      opt.value = b.name;
+      list.appendChild(opt);
+    });
+    document.getElementById('upcomingBuyerName').value = '';
+    document.getElementById('upcomingBottles').value = '';
+    document.getElementById('upcomingMsgBox').className = 'modal-msg';
+    document.getElementById('upcomingMsgBox').textContent = '';
+    upcomingOverlay.classList.add('open');
+  }
+  function closeUpcomingModal(){ upcomingOverlay.classList.remove('open'); }
+
+  document.getElementById('addUpcomingBtn').addEventListener('click', openUpcomingModal);
+  document.getElementById('upcomingCancelBtn').addEventListener('click', closeUpcomingModal);
+  upcomingOverlay.addEventListener('click', (e) => { if (e.target === upcomingOverlay) closeUpcomingModal(); });
+
+  document.getElementById('upcomingSaveBtn').addEventListener('click', () => {
+    const buyerName = document.getElementById('upcomingBuyerName').value.trim();
+    const bottles = document.getElementById('upcomingBottles').value;
+    const msgBox = document.getElementById('upcomingMsgBox');
+
+    if (!buyerName) { msgBox.textContent = 'Please enter a buyer name.'; msgBox.className = 'modal-msg error'; return; }
+    if (!bottles || Number(bottles) <= 0) { msgBox.textContent = 'Please enter a valid bottle quantity.'; msgBox.className = 'modal-msg error'; return; }
+
+    upcomingOrders.push({ id: upcomingIdCounter++, buyerName, bottles: Number(bottles) });
+    renderUpcomingOrders();
+    closeUpcomingModal();
   });
 
   // ---- Tab switching ----
