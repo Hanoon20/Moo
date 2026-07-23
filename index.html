@@ -663,6 +663,17 @@
   .whatsapp-btn svg{ width:18px; height:18px; }
   .whatsapp-btn:disabled{ opacity:0.6; cursor:not-allowed; }
 
+  .contact-pick-btn{
+    flex-shrink:0;
+    width:44px;
+    border-radius:11px;
+    border:1.5px solid var(--line);
+    background: var(--cream-card);
+    font-size:18px;
+    cursor:pointer;
+  }
+  .contact-pick-btn:active{ background: var(--sage-bg); }
+
   /* ---------- SEARCH BAR ---------- */
   .search-wrap{
     margin: 4px 22px 6px;
@@ -911,7 +922,10 @@
       <input type="text" class="field-input" id="saleRemark" placeholder="e.g. Morning delivery">
 
       <div class="field-label">WhatsApp Number (optional)</div>
-      <input type="tel" class="field-input" id="saleWhatsapp" placeholder="e.g. 0771234567">
+      <div style="display:flex; gap:8px;">
+        <input type="tel" class="field-input" id="saleWhatsapp" placeholder="e.g. 0771234567" style="flex:1;">
+        <button type="button" id="saleContactPickBtn" class="contact-pick-btn" style="display:none;" title="Pick from contacts">👤</button>
+      </div>
 
       <div class="date-note">Distribution Date: <b id="saleTodayDisplay"></b> (added automatically)</div>
 
@@ -944,7 +958,10 @@
       <input type="number" class="field-input" id="payAmount" min="1" step="0.01" placeholder="e.g. 5000">
 
       <div class="field-label">WhatsApp Number (optional)</div>
-      <input type="tel" class="field-input" id="payWhatsapp" placeholder="e.g. 0771234567">
+      <div style="display:flex; gap:8px;">
+        <input type="tel" class="field-input" id="payWhatsapp" placeholder="e.g. 0771234567" style="flex:1;">
+        <button type="button" id="payContactPickBtn" class="contact-pick-btn" style="display:none;" title="Pick from contacts">👤</button>
+      </div>
 
       <div class="modal-msg" id="payMsgBox"></div>
 
@@ -1518,6 +1535,33 @@
     if (n.startsWith('0')) n = '94' + n.slice(1);          // local Sri Lanka format -> country code
     else if (n.length === 9 && !n.startsWith('94')) n = '94' + n; // missing leading 0 and country code
     return n;
+  }
+
+  // ---- CONTACT PICKER — lets the user pick a saved phone contact instead ----
+  // of typing the number. Only supported on Android Chrome/WebView; the pick
+  // button stays hidden everywhere else (feature-detected, no error shown).
+  const contactPickerSupported = ('contacts' in navigator && 'ContactsManager' in window);
+
+  async function pickContactInto(inputId){
+    try {
+      const props = ['tel'];
+      const opts = { multiple: false };
+      const contacts = await navigator.contacts.select(props, opts);
+      if (!contacts || !contacts.length || !contacts[0].tel || !contacts[0].tel.length) return;
+      const field = document.getElementById(inputId);
+      field.value = contacts[0].tel[0];
+      field.dataset.userEdited = 'true';
+      field.dispatchEvent(new Event('input', { bubbles: true }));
+    } catch (err) {
+      // user cancelled the picker, or picker unavailable — nothing to do
+    }
+  }
+
+  if (contactPickerSupported) {
+    document.getElementById('saleContactPickBtn').style.display = 'block';
+    document.getElementById('payContactPickBtn').style.display = 'block';
+    document.getElementById('saleContactPickBtn').addEventListener('click', () => pickContactInto('saleWhatsapp'));
+    document.getElementById('payContactPickBtn').addEventListener('click', () => pickContactInto('payWhatsapp'));
   }
 
   const BUSINESS_TITLE = 'MOOFRESH GOATMILK';
