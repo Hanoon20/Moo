@@ -1329,8 +1329,7 @@ function renderPendingOrders(){
       const data = await submitPaymentToSheet(amount);
       showPayMsg('Payment recorded! Applied ' + fmtSaleModal(data.appliedAmount) + '.', 'success');
 
-      const fresh = await fetch(API_URL).then(r => r.json());
-      processData(fresh.buyers || [], fresh.sales || []);
+      await safeRefresh();
 
       setTimeout(closePayModal, 1300);
     } catch (err) {
@@ -1359,8 +1358,7 @@ function renderPendingOrders(){
       const data = await submitPaymentToSheet(amount);
       showPayMsg('Payment recorded! Opening WhatsApp\u2026', 'success');
 
-      const fresh = await fetch(API_URL).then(r => r.json());
-      processData(fresh.buyers || [], fresh.sales || []);
+      await safeRefresh();
 
       const remainingBalance = Math.max(0, payTargetDue - data.appliedAmount);
       const message = buildPaymentReceiptMessage(payTargetBuyer, data.appliedAmount, remainingBalance);
@@ -1557,6 +1555,18 @@ function showOrderMsg(text, type){
     return null;
   }
 
+  // Re-fetches dashboard data after a save. Never throws — a refresh
+  // failure should not be reported as a save failure, since the save
+  // (sale/payment) already succeeded on the sheet by the time this runs.
+  async function safeRefresh(){
+    try {
+      const fresh = await fetch(API_URL).then(r => r.json());
+      processData(fresh.buyers || [], fresh.sales || []);
+    } catch (err) {
+      console.warn('Dashboard refresh failed after save (data was saved OK):', err);
+    }
+  }
+
   // Does the actual save (POST to Apps Script). Returns the response data or throws.
   async function submitSaleToSheet(f){
     const res = await fetch(API_URL, {
@@ -1610,8 +1620,7 @@ function showOrderMsg(text, type){
       renderPendingOrders();
       showSaleMsg('Sale created! Total ' + fmtSaleModal(data.total) + ', balance ' + fmtSaleModal(data.balance) + '.', 'success');
 
-      const fresh = await fetch(API_URL).then(r => r.json());
-      processData(fresh.buyers || [], fresh.sales || []);
+      await safeRefresh();
 
       setTimeout(closeSaleModal, 1300);
     } catch (e) {
@@ -1640,8 +1649,7 @@ function showOrderMsg(text, type){
       renderPendingOrders();
       showSaleMsg('Sale created! Opening WhatsApp…', 'success');
 
-      const fresh = await fetch(API_URL).then(r => r.json());
-      processData(fresh.buyers || [], fresh.sales || []);
+      await safeRefresh();
 
       const message = buildInvoiceMessage(f, data);
       window.open('https://wa.me/' + waNumber + '?text=' + encodeURIComponent(message), '_blank');
