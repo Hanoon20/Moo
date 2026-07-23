@@ -816,14 +816,6 @@
         <div class="section-count" id="followupCount">0</div>
       </div>
       <div class="buyer-list" id="followupList"></div>
-      <div class="section-head">
-  <div class="section-title">New Orders</div>
-  <div class="section-count" id="pendingOrderCount">0</div>
-</div>
-<div style="margin:0 22px;">
-  <button class="pay-btn" id="newOrderBtn" style="width:100%;padding:12px;">+ New Order</button>
-</div>
-<div class="buyer-list" id="pendingOrderList" style="margin-top:10px;"></div>
       <div class="footnote">Pull up Buyers or Sales below for full detail</div>
     </div>
 
@@ -941,21 +933,6 @@
     </div>
   </div>
 
-  <div class="modal-overlay" id="newOrderModalOverlay">
-  <div class="modal-sheet">
-    <div class="modal-title">📝 New Order</div>
-    <div class="field-label">Buyer Name</div>
-    <input type="text" class="field-input" id="orderBuyerName" list="saleBuyerList" placeholder="Type or pick a buyer" autocomplete="off">
-    <div class="field-label">Quantity (bottles)</div>
-    <input type="number" class="field-input" id="orderQty" min="1" step="1" placeholder="e.g. 50">
-    <div class="modal-msg" id="orderMsgBox"></div>
-    <div class="modal-btn-row">
-      <button id="orderCancelBtn" type="button">Cancel</button>
-      <button id="orderSubmitBtn" type="button">Save Order</button>
-    </div>
-  </div>
-</div>
-
   <div class="modal-overlay" id="payModalOverlay">
     <div class="modal-sheet">
       <div class="modal-title">💰 Record Payment</div>
@@ -1012,22 +989,6 @@
   let buyers = [];
   let sales = [];
   let ledger = [];
-  let pendingOrders = [];
-let pendingOrderSeq = 1;
-
-function renderPendingOrders(){
-  document.getElementById('pendingOrderCount').textContent = pendingOrders.length;
-  const list = document.getElementById('pendingOrderList');
-  list.innerHTML = pendingOrders.map(o => `
-    <div class="buyer-card followup-card" data-order="${o.id}">
-      <div class="buyer-avatar">${initials(o.buyerName)}</div>
-      <div class="buyer-info">
-        <div class="buyer-name">${o.buyerName}</div>
-        <div class="buyer-meta">Qty: <b>${o.qty}</b> bottles (pending)</div>
-      </div>
-    </div>
-  `).join('');
-}
 
   const fmt = n => 'Rs. ' + Math.round(n).toLocaleString('en-IN');
   const initials = name => (name || '?').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
@@ -1468,37 +1429,6 @@ function renderPendingOrders(){
 
   function closeSaleModal(){ overlay.classList.remove('open'); }
 
-  const newOrderOverlay = document.getElementById('newOrderModalOverlay');
-function openNewOrderModal(){
-  document.getElementById('orderBuyerName').value = '';
-  document.getElementById('orderQty').value = '';
-  document.getElementById('orderMsgBox').className = 'modal-msg';
-  document.getElementById('orderMsgBox').textContent = '';
-  newOrderOverlay.classList.add('open');
-}
-function closeNewOrderModal(){ newOrderOverlay.classList.remove('open'); }
-
-document.getElementById('newOrderBtn').addEventListener('click', openNewOrderModal);
-document.getElementById('orderCancelBtn').addEventListener('click', closeNewOrderModal);
-newOrderOverlay.addEventListener('click', (e) => { if (e.target === newOrderOverlay) closeNewOrderModal(); });
-
-  document.getElementById('orderSubmitBtn').addEventListener('click', () => {
-  const name = document.getElementById('orderBuyerName').value.trim();
-  const qty = document.getElementById('orderQty').value;
-  if (!name) { showOrderMsg('Please enter a buyer name.', 'error'); return; }
-  if (!qty || Number(qty) <= 0) { showOrderMsg('Please enter a valid quantity.', 'error'); return; }
-
-  pendingOrders.push({ id: 'ORD' + (pendingOrderSeq++), buyerName: name, qty: Number(qty) });
-  renderPendingOrders();
-  closeNewOrderModal();
-});
-
-function showOrderMsg(text, type){
-  const box = document.getElementById('orderMsgBox');
-  box.textContent = text;
-  box.className = 'modal-msg ' + type;
-}
-
   document.getElementById('fabNewSale').addEventListener('click', openSaleModal);
 
   // Auto-fill WhatsApp number when the typed/selected buyer already has one saved
@@ -1616,8 +1546,6 @@ function showOrderMsg(text, type){
 
    try {
       const data = await submitSaleToSheet(f);
-      pendingOrders = pendingOrders.filter(o => normName(o.buyerName) !== normName(f.buyerName));
-      renderPendingOrders();
       showSaleMsg('Sale created! Total ' + fmtSaleModal(data.total) + ', balance ' + fmtSaleModal(data.balance) + '.', 'success');
 
       await safeRefresh();
@@ -1645,8 +1573,6 @@ function showOrderMsg(text, type){
 
     try {
       const data = await submitSaleToSheet(f);
-      pendingOrders = pendingOrders.filter(o => normName(o.buyerName) !== normName(f.buyerName));
-      renderPendingOrders();
       showSaleMsg('Sale created! Opening WhatsApp…', 'success');
 
       await safeRefresh();
