@@ -1524,7 +1524,7 @@
 
   function renderSaleProductRows(){
     const container = document.getElementById('saleProductRows');
-    const list = productPriceList.length ? productPriceList : [{ name:'Fresh', price:0 }];
+    const list = productPriceList.length ? productPriceList : SAMPLE_PRICE_LIST;
     container.innerHTML = list.map((p, idx) => `
       <div class="product-row">
         <div class="pname">${p.name}</div>
