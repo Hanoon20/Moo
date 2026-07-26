@@ -594,6 +594,42 @@
     outline:none;
   }
   .field-input:focus{ border-color: var(--brass); }
+  .product-grid-head{
+    display:grid;
+    grid-template-columns: 1.3fr 0.7fr 0.9fr 0.9fr;
+    gap:6px;
+    background: var(--bottle-green);
+    color:#fff;
+    font-size:10.5px;
+    font-weight:600;
+    padding:7px 9px;
+    border-radius:10px 10px 0 0;
+    margin-top:5px;
+  }
+  .product-row{
+    display:grid;
+    grid-template-columns: 1.3fr 0.7fr 0.9fr 0.9fr;
+    gap:6px;
+    align-items:center;
+    padding:6px 9px;
+    background: var(--cream-card);
+    border:1px solid var(--line);
+    border-top:none;
+  }
+  #saleProductRows .product-row:last-child{ border-radius:0 0 10px 10px; }
+  .product-row .pname{ font-size:12px; font-weight:600; color: var(--ink); }
+  .product-row input{
+    width:100%;
+    padding:6px 7px;
+    font-size:12px;
+    border-radius:7px;
+    border:1.5px solid var(--line);
+    background:#fff;
+    font-family:'Work Sans', sans-serif;
+    outline:none;
+  }
+  .product-row input:focus{ border-color: var(--brass); }
+  .product-row .pamt{ font-size:12px; text-align:right; color: var(--ink-soft); }
   .date-note{
     font-size:11.5px;
     color: var(--ink-soft);
@@ -909,11 +945,11 @@
       <input type="text" class="field-input" id="saleBuyerName" list="saleBuyerList" placeholder="Type or pick a buyer" autocomplete="off">
       <datalist id="saleBuyerList"></datalist>
 
-      <div class="field-label">Bottles</div>
-      <input type="number" class="field-input" id="saleBottles" min="1" step="1" placeholder="e.g. 50">
-
-      <div class="field-label">Per Bottle Price (Rs.)</div>
-      <input type="number" class="field-input" id="salePrice" min="0" step="0.01" placeholder="e.g. 220">
+      <div class="field-label">Products</div>
+      <div class="product-grid-head">
+        <div>Product</div><div>Qty</div><div>Unit Price</div><div style="text-align:right">Amount</div>
+      </div>
+      <div id="saleProductRows"></div>
 
       <div class="field-label">Paid Amount (Rs.)</div>
       <input type="number" class="field-input" id="salePaid" min="0" step="0.01" placeholder="0 if nothing paid yet">
@@ -1005,6 +1041,7 @@
   let API_URL = '';
   let buyers = [];
   let sales = [];
+  let productPriceList = []; // [{name, price}] — from the sheet's Price List / recent sales
   let ledger = [];
 
   const fmt = n => 'Rs. ' + Math.round(n).toLocaleString('en-IN');
@@ -1031,19 +1068,32 @@
       { id:'BUY003', name:'Lakshan Traders', area:'Galle', type:'Retailer' },
     ],
     sales: [
-      { id:'SALE004', date:'2026-07-09', buyerName:'Nimal Stores', bottles:40, price:220, received:8800 },
-      { id:'SALE003', date:'2026-07-06', buyerName:'Lakshan Traders', bottles:80, price:215, received:17200 },
-      { id:'SALE002', date:'2026-07-03', buyerName:'Green Mart', bottles:200, price:210, received:0 },
-      { id:'SALE001', date:'2026-07-01', buyerName:'Nimal Stores', bottles:50, price:220, received:8000 },
+      { id:'SALE004', date:'2026-07-09', buyerName:'Nimal Stores', items:[{product:'Fresh',qty:30,price:220,amount:6600},{product:'Vanilla',qty:10,price:240,amount:2400}], bottles:40, total:9000, received:8800 },
+      { id:'SALE003', date:'2026-07-06', buyerName:'Lakshan Traders', items:[{product:'Fresh',qty:80,price:215,amount:17200}], bottles:80, total:17200, received:17200 },
+      { id:'SALE002', date:'2026-07-03', buyerName:'Green Mart', items:[{product:'Fresh',qty:200,price:210,amount:42000}], bottles:200, total:42000, received:0 },
+      { id:'SALE001', date:'2026-07-01', buyerName:'Nimal Stores', items:[{product:'Fresh',qty:50,price:220,amount:11000}], bottles:50, total:11000, received:8000 },
     ]
   };
+  const SAMPLE_PRICE_LIST = [
+    { name:'Fresh', price:220 }, { name:'Vanilla', price:240 }, { name:'Strawberry', price:240 },
+    { name:'Cardamom', price:240 }, { name:'Coffee', price:240 }, { name:'Chocolate', price:240 }
+  ];
 
   const normName = n => (n || '').toString().trim().toLowerCase();
+
+  // Turns a sale's items array into a short readable line, e.g.
+  // "12 Fresh + 4 Vanilla" — falls back to total bottle count if no items.
+  function itemsLine(s){
+    if (Array.isArray(s.items) && s.items.length){
+      return s.items.map(it => `${it.qty} ${it.product}`).join(' + ');
+    }
+    return (s.bottles || 0) + ' bottles';
+  }
 
   function processData(rawBuyers, rawSales){
     buyers = rawBuyers;
     sales = rawSales.map(s => {
-      const total = s.total != null ? s.total : s.bottles * s.price;
+      const total = s.total != null ? s.total : 0;
       const received = s.received || 0;
       const matchedBuyer = buyers.find(b => normName(b.name) === normName(s.buyerName));
       return {
@@ -1119,7 +1169,7 @@
         <div>
           <div class="sale-id">${s.id} · ${s.date ? new Date(s.date).toLocaleDateString('en-GB',{day:'2-digit',month:'short'}) : ''}</div>
           <div class="sale-buyer">${s.buyerObj.name}</div>
-          <div class="sale-detail">${s.bottles} bottles @ Rs. ${s.price}</div>
+          <div class="sale-detail">${itemsLine(s)}</div>
         </div>
         <div class="sale-amount">
           <div class="sale-total">${fmt(s.total)}</div>
@@ -1195,7 +1245,7 @@
         <div class="sale-row ${s.status === 'paid' ? 'paid' : s.status === 'unpaid' ? 'unpaid' : ''}">
           <div>
             <div class="sale-id">${s.date ? new Date(s.date).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}) : ''}</div>
-            <div class="sale-detail">${s.bottles} bottles @ Rs. ${s.price}</div>
+            <div class="sale-detail">${itemsLine(s)}</div>
           </div>
           <div class="sale-amount">
             <div class="sale-total">${fmt(s.total)}</div>
@@ -1215,13 +1265,15 @@
 
   // ---- CSV export ----
   function exportSalesCsv(){
-    const header = ['Buyer', 'Date', 'Bottles', 'Price', 'Total', 'Received', 'Balance', 'Status'];
+    const header = ['Buyer', 'Date', 'Products', 'Bottles', 'Total', 'Received', 'Balance', 'Status'];
     const lines = [header.join(',')];
     sales.forEach(s => {
+      const productsSummary = (s.items || []).map(it => `${it.qty} ${it.product} @${it.price}`).join('; ');
       const row = [
         `"${(s.buyerObj.name || '').replace(/"/g,'""')}"`,
         s.date ? new Date(s.date).toLocaleDateString('en-GB') : '',
-        s.bottles, s.price, s.total, s.received, s.balance, s.status
+        `"${productsSummary.replace(/"/g,'""')}"`,
+        s.bottles, s.total, s.received, s.balance, s.status
       ];
       lines.push(row.join(','));
     });
@@ -1365,6 +1417,7 @@
       if(!res.ok) throw new Error('Bad response');
       const data = await res.json();
       API_URL = url;
+      productPriceList = data.priceList || [];
       processData(data.buyers || [], (data.sales || []).map(s => ({ ...s })));
       document.getElementById('connectScreen').classList.add('hidden');
     } catch(err){
@@ -1382,6 +1435,7 @@
   });
 
   document.getElementById('demoLink').addEventListener('click', () => {
+    productPriceList = SAMPLE_PRICE_LIST;
     processData(SAMPLE.buyers, SAMPLE.sales);
     document.getElementById('connectScreen').classList.add('hidden');
   });
@@ -1391,6 +1445,7 @@
     btn.classList.add('spinning');
     if(API_URL){
       fetch(API_URL).then(r=>r.json()).then(data=>{
+        productPriceList = data.priceList || productPriceList;
         processData(data.buyers || [], data.sales || []);
       }).finally(()=> btn.classList.remove('spinning'));
     } else {
@@ -1426,10 +1481,11 @@
       list.appendChild(opt);
     });
 
-    ['saleBuyerName','saleBottles','salePrice','salePaid','saleRemark','saleWhatsapp'].forEach(id => {
+    ['saleBuyerName','salePaid','saleRemark','saleWhatsapp'].forEach(id => {
       document.getElementById(id).value = '';
     });
     delete document.getElementById('saleWhatsapp').dataset.userEdited;
+    renderSaleProductRows();
     document.getElementById('saleTotalDisplay').textContent = 'Rs. 0';
     document.getElementById('saleBalanceDisplay').textContent = 'Rs. 0';
     document.getElementById('saleMsgBox').className = 'modal-msg';
@@ -1466,17 +1522,38 @@
   document.getElementById('saleCancelBtn').addEventListener('click', closeSaleModal);
   overlay.addEventListener('click', (e) => { if (e.target === overlay) closeSaleModal(); });
 
+  function renderSaleProductRows(){
+    const container = document.getElementById('saleProductRows');
+    const list = productPriceList.length ? productPriceList : [{ name:'Fresh', price:0 }];
+    container.innerHTML = list.map((p, idx) => `
+      <div class="product-row">
+        <div class="pname">${p.name}</div>
+        <input type="number" min="0" step="1" placeholder="0" data-idx="${idx}" class="saleQtyInput">
+        <input type="number" min="0" step="0.01" value="${p.price || 0}" data-idx="${idx}" class="salePriceInput">
+        <div class="pamt" id="saleAmt-${idx}">Rs. 0</div>
+      </div>
+    `).join('');
+    container.dataset.products = JSON.stringify(list.map(p => p.name));
+    container.querySelectorAll('.saleQtyInput, .salePriceInput').forEach(inp => {
+      inp.addEventListener('input', recalcSaleModal);
+    });
+    recalcSaleModal();
+  }
+
   function recalcSaleModal(){
-    const bottles = parseFloat(document.getElementById('saleBottles').value) || 0;
-    const price = parseFloat(document.getElementById('salePrice').value) || 0;
+    let total = 0;
+    document.querySelectorAll('#saleProductRows .product-row').forEach((row, idx) => {
+      const qty = parseFloat(row.querySelector('.saleQtyInput').value) || 0;
+      const price = parseFloat(row.querySelector('.salePriceInput').value) || 0;
+      const amt = qty * price;
+      document.getElementById('saleAmt-' + idx).textContent = fmtSaleModal(amt);
+      total += amt;
+    });
     const paid = parseFloat(document.getElementById('salePaid').value) || 0;
-    const total = bottles * price;
     document.getElementById('saleTotalDisplay').textContent = fmtSaleModal(total);
     document.getElementById('saleBalanceDisplay').textContent = fmtSaleModal(total - paid);
   }
-  ['saleBottles','salePrice','salePaid'].forEach(id => {
-    document.getElementById(id).addEventListener('input', recalcSaleModal);
-  });
+  document.getElementById('salePaid').addEventListener('input', recalcSaleModal);
 
   function showSaleMsg(text, type){
     const box = document.getElementById('saleMsgBox');
@@ -1485,10 +1562,16 @@
   }
 
   function readSaleForm(){
+    const items = [];
+    document.querySelectorAll('#saleProductRows .product-row').forEach((row, idx) => {
+      const name = row.querySelector('.pname').textContent;
+      const qty = Number(row.querySelector('.saleQtyInput').value) || 0;
+      const price = Number(row.querySelector('.salePriceInput').value) || 0;
+      items.push({ product: name, qty, price });
+    });
     return {
       buyerName: document.getElementById('saleBuyerName').value.trim(),
-      bottles: document.getElementById('saleBottles').value,
-      price: document.getElementById('salePrice').value,
+      items,
       paid: document.getElementById('salePaid').value || 0,
       remark: document.getElementById('saleRemark').value.trim(),
       whatsapp: document.getElementById('saleWhatsapp').value.trim()
@@ -1497,8 +1580,7 @@
 
   function validateSaleForm(f){
     if (!f.buyerName) return 'Please enter a buyer name.';
-    if (!f.bottles || Number(f.bottles) <= 0) return 'Please enter number of bottles.';
-    if (!f.price || Number(f.price) <= 0) return 'Please enter price per bottle.';
+    if (!f.items.some(it => it.qty > 0)) return 'Enter quantity for at least one product.';
     return null;
   }
 
@@ -1508,6 +1590,7 @@
   async function safeRefresh(){
     try {
       const fresh = await fetch(API_URL).then(r => r.json());
+      productPriceList = fresh.priceList || productPriceList;
       processData(fresh.buyers || [], fresh.sales || []);
     } catch (err) {
       console.warn('Dashboard refresh failed after save (data was saved OK):', err);
@@ -1521,7 +1604,7 @@
       headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify({
         action: 'createSale',
-        payload: { buyerName: f.buyerName, bottles: f.bottles, price: f.price, paid: f.paid, remark: f.remark, whatsapp: f.whatsapp }
+        payload: { buyerName: f.buyerName, items: f.items, paid: f.paid, remark: f.remark, whatsapp: f.whatsapp }
       })
     });
     const data = await res.json();
@@ -1571,7 +1654,11 @@
 
   function buildInvoiceMessage(f, data){
     const today = new Date().toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
-    return `*${BUSINESS_TITLE}*\nSupplier: ${SUPPLIER_NAME}\n------------------------\n\nHi ${f.buyerName},\n\nYour delivery invoice details:\n\nDate: ${today}\nBottles: ${f.bottles}\nPrice per Bottle: Rs. ${Number(f.price).toLocaleString('en-IN')}\n\nTotal Amount: ${fmtSaleModal(data.total)}\nAmount Paid: ${fmtSaleModal(f.paid)}\nBalance Due: ${fmtSaleModal(data.balance)}\n\nThank you for your business.\n\n${CONTACT_FOOTER}`;
+    const lines = f.items
+      .filter(it => it.qty > 0)
+      .map(it => `${it.qty} x ${it.product} @ Rs. ${Number(it.price).toLocaleString('en-IN')} = Rs. ${(it.qty*it.price).toLocaleString('en-IN')}`)
+      .join('\n');
+    return `*${BUSINESS_TITLE}*\nSupplier: ${SUPPLIER_NAME}\n------------------------\n\nHi ${f.buyerName},\n\nYour delivery invoice details:\n\nDate: ${today}\n${lines}\n\nTotal Amount: ${fmtSaleModal(data.total)}\nAmount Paid: ${fmtSaleModal(f.paid)}\nBalance Due: ${fmtSaleModal(data.balance)}\n\nThank you for your business.\n\n${CONTACT_FOOTER}`;
   }
 
   function buildPaymentReceiptMessage(buyerName, appliedAmount, remainingBalance){
