@@ -1110,7 +1110,8 @@
       const bottles = rows.reduce((a,s)=>a+s.bottles,0);
       const total = rows.reduce((a,s)=>a+s.total,0);
       const received = rows.reduce((a,s)=>a+s.received,0);
-      return { ...b, bottles, total, received, balance: total-received, status: statusOf(total, received), orders: rows.length };
+      const lastSaleDate = rows.reduce((latest,s) => (!latest || new Date(s.date) > new Date(latest)) ? s.date : latest, null);
+      return { ...b, bottles, total, received, balance: total-received, status: statusOf(total, received), orders: rows.length, lastSaleDate };
     });
 
     render();
@@ -1145,7 +1146,9 @@
       rect.setAttribute('height', h);
     });
 
-    const followups = ledger.filter(b => b.balance > 0).sort((a,b)=>b.balance-a.balance);
+    const followups = ledger
+      .filter(b => (b.status === 'partial' || b.status === 'unpaid') && b.balance > 0)
+      .sort((a,b) => new Date(b.lastSaleDate || 0) - new Date(a.lastSaleDate || 0));
     document.getElementById('followupCount').textContent = followups.length;
     const followupList = document.getElementById('followupList');
     followupList.innerHTML = followups.length === 0
@@ -1215,12 +1218,15 @@
   }
 
   function followupCardHTML(b){
+    const lastBillTxt = b.lastSaleDate
+      ? new Date(b.lastSaleDate).toLocaleDateString('en-GB',{day:'2-digit',month:'short'})
+      : '—';
     return `
       <div class="buyer-card followup-card" data-buyer="${b.name.replace(/"/g,'&quot;')}">
         <div class="buyer-avatar">${initials(b.name)}</div>
         <div class="buyer-info">
           <div class="buyer-name">${b.name}</div>
-          <div class="buyer-meta">Due: <b style="color:var(--rust)">${fmt(b.balance)}</b></div>
+          <div class="buyer-meta">Due: <b style="color:var(--rust)">${fmt(b.balance)}</b> · Last bill: ${lastBillTxt}</div>
         </div>
         <button class="pay-btn" data-buyer="${b.name.replace(/"/g,'&quot;')}" data-due="${b.balance}">Pay</button>
       </div>`;
