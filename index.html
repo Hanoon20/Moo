@@ -158,6 +158,8 @@
     border-radius:18px;
     padding:16px 16px 14px;
   }
+  .kpi-clickable{ cursor:pointer; transition: transform .12s ease; }
+  .kpi-clickable:active{ transform: scale(0.97); }
   .kpi-label{
     font-size:11.5px;
     color: var(--ink-soft);
@@ -187,44 +189,7 @@
     align-items:baseline;
     margin: 26px 22px 12px;
   }
-  .add-upcoming-btn{
-    width:26px; height:26px;
-    border-radius:8px;
-    border:1px solid var(--line);
-    background: var(--cream-card);
-    color: var(--bottle-green);
-    display:flex; align-items:center; justify-content:center;
-    cursor:pointer;
-  }
-  .add-upcoming-btn svg{ width:14px; height:14px; }
-  .upcoming-card{
-    display:flex;
-    align-items:center;
-    gap:12px;
-  }
-  .upcoming-remove-btn{
-    flex-shrink:0;
-    width:30px; height:30px;
-    border-radius:9px;
-    border:1px solid var(--line);
-    background: var(--cream-card);
-    color: var(--ink-soft);
-    display:flex; align-items:center; justify-content:center;
-    cursor:pointer;
-  }
-  .upcoming-remove-btn svg{ width:13px; height:13px; }
-  .upcoming-use-btn{
-    flex-shrink:0;
-    padding:9px 14px;
-    border-radius:10px;
-    border:none;
-    background: var(--brass);
-    color:#fff;
-    font-size:12px;
-    font-weight:600;
-    cursor:pointer;
-    font-family:'Work Sans', sans-serif;
-  }
+
   .section-title{
     font-family:'Fraunces', serif;
     font-size:18px;
@@ -291,6 +256,7 @@
     letter-spacing:0.03em;
     padding:3px 9px;
     border-radius:20px;
+    white-space:nowrap;
   }
   .status-paid{ background: var(--sage-bg); color: var(--sage); }
   .status-partial{ background: var(--amber-bg); color: var(--brass); }
@@ -311,19 +277,29 @@
   }
   .sale-row.paid{ border-left-color: var(--sage); }
   .sale-row.unpaid{ border-left-color: var(--rust); }
+  .sale-row > div:first-child{ flex:1; min-width:0; margin-right:10px; }
   .sale-id{
     font-family:'IBM Plex Mono', monospace;
     font-size:10.5px;
     color: var(--ink-soft);
+    white-space:nowrap;
   }
-  .sale-buyer{ font-weight:600; font-size:13.5px; margin-top:2px; }
-  .sale-detail{ font-size:11.5px; color: var(--ink-soft); margin-top:2px; }
-  .sale-amount{ text-align:right; }
+  .sale-buyer{ font-weight:600; font-size:13.5px; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .sale-detail{
+    font-size:11.5px;
+    color: var(--ink-soft);
+    margin-top:2px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .sale-amount{ text-align:right; flex-shrink:0; }
   .sale-total{
     font-family:'IBM Plex Mono', monospace;
     font-weight:600;
     font-size:14px;
     color: var(--bottle-green);
+    white-space:nowrap;
   }
   .sale-actions{
     display:flex;
@@ -673,8 +649,6 @@
     border-top:none;
   }
   #saleProductRows .product-row:last-child{ border-radius:0 0 10px 10px; }
-  #upcomingProductRows .product-row{ grid-template-columns: 1fr 1fr; }
-  #upcomingProductRows .product-row:last-child{ border-radius:0 0 10px 10px; }
   .product-row .pname{ font-size:12px; font-weight:600; color: var(--ink); }
   .product-row input{
     width:100%;
@@ -899,10 +873,10 @@
           <div class="kpi-value" id="kpiRevenue">Rs. 0</div>
           <div class="kpi-unit" id="kpiSalesCount">0 sales</div>
         </div>
-        <div class="kpi-card">
+        <div class="kpi-card kpi-clickable" id="kpiBottlesCard">
           <div class="kpi-label">Bottles Sold</div>
           <div class="kpi-value" id="kpiBottles">0</div>
-          <div class="kpi-unit">this month</div>
+          <div class="kpi-unit">tap for monthly breakdown</div>
         </div>
         <div class="kpi-card">
           <div class="kpi-label">Received</div>
@@ -921,14 +895,6 @@
         <div class="section-count" id="followupCount">0</div>
       </div>
       <div class="buyer-list" id="followupList"></div>
-
-      <div class="section-head" style="margin-top:22px;">
-        <div class="section-title">Upcoming Orders</div>
-        <button class="add-upcoming-btn" id="addUpcomingBtn" title="Add upcoming order">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-        </button>
-      </div>
-      <div class="buyer-list" id="upcomingList"></div>
 
       <div class="footnote">Pull up Buyers or Sales below for full detail</div>
     </div>
@@ -994,6 +960,17 @@
 
       <div class="modal-btn-row">
         <button id="buyerDetailCloseBtn" type="button" style="background:var(--bottle-green);color:#fff;">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="bottlesModalOverlay">
+    <div class="modal-sheet">
+      <div class="modal-title">Bottles Sold by Month</div>
+      <div class="modal-sub">Total quantity sold each month, across all products.</div>
+      <div id="bottlesByMonthList"></div>
+      <div class="modal-btn-row">
+        <button id="bottlesModalCloseBtn" type="button" style="background:var(--bottle-green);color:#fff;">Close</button>
       </div>
     </div>
   </div>
@@ -1076,30 +1053,6 @@
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.44.79 3.06 1.2 4.7 1.2h.01c5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.05 2h-.01zm5.8 14.13c-.24.68-1.4 1.32-1.94 1.4-.5.08-1.12.11-1.81-.11-.42-.13-.95-.31-1.64-.6-2.88-1.24-4.76-4.14-4.9-4.33-.14-.19-1.18-1.57-1.18-3 0-1.42.75-2.13 1.01-2.42.27-.29.58-.36.77-.36.19 0 .39 0 .55.01.18.01.42-.07.65.5.24.58.82 2 .89 2.15.07.15.12.32.02.51-.09.19-.14.31-.28.48-.14.16-.29.36-.42.49-.14.13-.28.28-.12.55.16.27.72 1.19 1.55 1.93 1.06.95 1.96 1.24 2.23 1.38.27.14.43.12.59-.07.16-.19.68-.79.86-1.06.18-.27.36-.22.6-.13.24.09 1.53.72 1.79.85.26.13.44.19.5.3.06.11.06.63-.18 1.31z"/></svg>
         Save &amp; Send
       </button>
-    </div>
-  </div>
-
-  <div class="modal-overlay" id="upcomingModalOverlay">
-    <div class="modal-sheet">
-      <div class="modal-title">Upcoming Order</div>
-      <div class="modal-sub">A quick reminder for a planned order — not saved to the sheet yet.</div>
-
-      <div class="field-label">Buyer Name</div>
-      <input type="text" class="field-input" id="upcomingBuyerName" list="upcomingBuyerList" placeholder="Type or pick a buyer" autocomplete="off">
-      <datalist id="upcomingBuyerList"></datalist>
-
-      <div class="field-label">Products</div>
-      <div class="product-grid-head" style="grid-template-columns: 1fr 1fr;">
-        <div>Product</div><div>Qty</div>
-      </div>
-      <div id="upcomingProductRows"></div>
-
-      <div class="modal-msg" id="upcomingMsgBox"></div>
-
-      <div class="modal-btn-row">
-        <button id="upcomingCancelBtn" type="button">Cancel</button>
-        <button id="upcomingSaveBtn" type="button">Add to List</button>
-      </div>
     </div>
   </div>
 
@@ -1415,6 +1368,42 @@
     if (e.target.id === 'buyerDetailOverlay') e.target.classList.remove('open');
   });
 
+  // ---- Bottles Sold by Month modal ----
+  function openBottlesByMonthModal(){
+    const map = {};
+    sales.forEach(s => {
+      if (!s.date) return;
+      const d = new Date(s.date);
+      if (isNaN(d)) return;
+      const key = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+      const label = d.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+      if (!map[key]) map[key] = { label, bottles: 0 };
+      map[key].bottles += (s.bottles || 0);
+    });
+
+    const rows = Object.keys(map)
+      .sort((a, b) => b.localeCompare(a))
+      .map(k => map[k]);
+
+    document.getElementById('bottlesByMonthList').innerHTML = rows.length === 0
+      ? '<div class="empty-state">No sales yet.</div>'
+      : rows.map(r => `
+        <div class="sale-row">
+          <div class="sale-buyer">${r.label}</div>
+          <div class="sale-total">${r.bottles.toLocaleString('en-IN')} bottles</div>
+        </div>
+      `).join('');
+
+    document.getElementById('bottlesModalOverlay').classList.add('open');
+  }
+  document.getElementById('kpiBottlesCard').addEventListener('click', openBottlesByMonthModal);
+  document.getElementById('bottlesModalCloseBtn').addEventListener('click', () => {
+    document.getElementById('bottlesModalOverlay').classList.remove('open');
+  });
+  document.getElementById('bottlesModalOverlay').addEventListener('click', (e) => {
+    if (e.target.id === 'bottlesModalOverlay') e.target.classList.remove('open');
+  });
+
   // ---- CSV export ----
   function exportSalesCsv(){
     const header = ['Buyer', 'Date', 'Products', 'Bottles', 'Total', 'Received', 'Balance', 'Status'];
@@ -1617,9 +1606,7 @@
   const overlay = document.getElementById('saleModalOverlay');
   const fmtSaleModal = n => 'Rs. ' + Math.round(n || 0).toLocaleString('en-IN');
 
-  let saleFromUpcomingId = null;
-
-  function openSaleModal(prefill){
+  function openSaleModal(){
     if (!API_URL) {
       alert('Connect your sheet first (see the Connect screen) before creating a sale.');
       return;
@@ -1640,22 +1627,6 @@
     });
     delete document.getElementById('saleWhatsapp').dataset.userEdited;
     renderSaleProductRows();
-
-    saleFromUpcomingId = null;
-    if (prefill) {
-      document.getElementById('saleBuyerName').value = prefill.buyerName || '';
-      saleFromUpcomingId = prefill.upcomingId || null;
-      document.getElementById('saleBuyerName').dispatchEvent(new Event('input'));
-      // fill in the planned quantity for each matching product row
-      if (Array.isArray(prefill.items)) {
-        document.querySelectorAll('#saleProductRows .product-row').forEach(row => {
-          const name = row.querySelector('.pname').textContent;
-          const match = prefill.items.find(it => it.product === name);
-          if (match) row.querySelector('.saleQtyInput').value = match.qty;
-        });
-        recalcSaleModal();
-      }
-    }
 
     document.getElementById('saleTotalDisplay').textContent = 'Rs. 0';
     document.getElementById('saleBalanceDisplay').textContent = 'Rs. 0';
@@ -1851,7 +1822,6 @@
       showSaleMsg('Sale created! Total ' + fmtSaleModal(data.total) + ', balance ' + fmtSaleModal(data.balance) + '.', 'success');
 
       await safeRefresh();
-      removeUpcomingOrder(saleFromUpcomingId);
 
       setTimeout(closeSaleModal, 1300);
     } catch (e) {
@@ -1879,7 +1849,6 @@
       showSaleMsg('Sale created! Opening WhatsApp…', 'success');
 
       await safeRefresh();
-      removeUpcomingOrder(saleFromUpcomingId);
 
       const message = buildInvoiceMessage(f, data);
       window.open('https://wa.me/' + waNumber + '?text=' + encodeURIComponent(message), '_blank');
@@ -1891,112 +1860,6 @@
       showSaleMsg(e.message || 'Something went wrong. Please try again.', 'error');
     }
   });
-
-  // ============================================================
-  //  UPCOMING ORDERS — lightweight, in-memory planning list.
-  //  Resets on page reload by design (these are reminders, not
-  //  saved to the sheet until turned into an actual sale).
-  // ============================================================
-  let upcomingOrders = [];
-  let upcomingIdCounter = 1;
-
-  function upcomingItemsLine(o){
-    return o.items.map(it => `${it.qty} ${it.product}`).join(' + ');
-  }
-
-  function renderUpcomingOrders(){
-    const listEl = document.getElementById('upcomingList');
-    if (upcomingOrders.length === 0) {
-      listEl.innerHTML = '<div class="empty-state">No upcoming orders planned yet.</div>';
-      return;
-    }
-    listEl.innerHTML = upcomingOrders.map(o => `
-      <div class="buyer-card upcoming-card">
-        <div class="buyer-avatar">${initials(o.buyerName)}</div>
-        <div class="buyer-info">
-          <div class="buyer-name">${o.buyerName}</div>
-          <div class="buyer-meta">${upcomingItemsLine(o)}</div>
-        </div>
-        <button class="upcoming-use-btn" data-id="${o.id}">Use</button>
-        <button class="upcoming-remove-btn" data-id="${o.id}" title="Remove">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
-        </button>
-      </div>
-    `).join('');
-
-    listEl.querySelectorAll('.upcoming-use-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const o = upcomingOrders.find(x => String(x.id) === btn.dataset.id);
-        if (!o) return;
-        openSaleModal({ buyerName: o.buyerName, items: o.items, upcomingId: o.id });
-      });
-    });
-    listEl.querySelectorAll('.upcoming-remove-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        removeUpcomingOrder(btn.dataset.id);
-      });
-    });
-  }
-
-  function removeUpcomingOrder(id){
-    if (id == null) return;
-    upcomingOrders = upcomingOrders.filter(o => String(o.id) !== String(id));
-    renderUpcomingOrders();
-  }
-
-  const upcomingOverlay = document.getElementById('upcomingModalOverlay');
-
-  function renderUpcomingProductRows(){
-    const container = document.getElementById('upcomingProductRows');
-    const list = productPriceList.length ? productPriceList : SAMPLE_PRICE_LIST;
-    container.innerHTML = list.map((p, idx) => `
-      <div class="product-row">
-        <div class="pname">${p.name}</div>
-        <input type="number" min="0" step="1" placeholder="0" data-idx="${idx}" class="upcomingQtyInput">
-      </div>
-    `).join('');
-  }
-
-  function openUpcomingModal(){
-    const list = document.getElementById('upcomingBuyerList');
-    list.innerHTML = '';
-    buyers.forEach(b => {
-      const opt = document.createElement('option');
-      opt.value = b.name;
-      list.appendChild(opt);
-    });
-    document.getElementById('upcomingBuyerName').value = '';
-    renderUpcomingProductRows();
-    document.getElementById('upcomingMsgBox').className = 'modal-msg';
-    document.getElementById('upcomingMsgBox').textContent = '';
-    upcomingOverlay.classList.add('open');
-  }
-  function closeUpcomingModal(){ upcomingOverlay.classList.remove('open'); }
-
-  document.getElementById('addUpcomingBtn').addEventListener('click', openUpcomingModal);
-  document.getElementById('upcomingCancelBtn').addEventListener('click', closeUpcomingModal);
-  upcomingOverlay.addEventListener('click', (e) => { if (e.target === upcomingOverlay) closeUpcomingModal(); });
-
-  document.getElementById('upcomingSaveBtn').addEventListener('click', () => {
-    const buyerName = document.getElementById('upcomingBuyerName').value.trim();
-    const msgBox = document.getElementById('upcomingMsgBox');
-
-    const items = [];
-    document.querySelectorAll('#upcomingProductRows .product-row').forEach(row => {
-      const name = row.querySelector('.pname').textContent;
-      const qty = Number(row.querySelector('.upcomingQtyInput').value) || 0;
-      if (qty > 0) items.push({ product: name, qty });
-    });
-
-    if (!buyerName) { msgBox.textContent = 'Please enter a buyer name.'; msgBox.className = 'modal-msg error'; return; }
-    if (items.length === 0) { msgBox.textContent = 'Enter a quantity for at least one product.'; msgBox.className = 'modal-msg error'; return; }
-
-    upcomingOrders.push({ id: upcomingIdCounter++, buyerName, items });
-    renderUpcomingOrders();
-    closeUpcomingModal();
-  });
-
-  renderUpcomingOrders();
 
   // ============================================================
   //  EDIT / DELETE SALE — from the Sales tab
