@@ -325,6 +325,23 @@
     font-size:14px;
     color: var(--bottle-green);
   }
+  .sale-actions{
+    display:flex;
+    gap:6px;
+    margin-top:6px;
+    justify-content:flex-end;
+  }
+  .sale-edit-btn, .sale-delete-btn{
+    width:26px; height:26px;
+    border-radius:8px;
+    border:1px solid var(--line);
+    background: var(--cream);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+  }
+  .sale-edit-btn{ color: var(--brass); }
+  .sale-delete-btn{ color: var(--rust); }
+  .sale-edit-btn svg, .sale-delete-btn svg{ width:13px; height:13px; }
 
   .footnote{
     margin: 22px 22px 8px;
@@ -656,6 +673,8 @@
     border-top:none;
   }
   #saleProductRows .product-row:last-child{ border-radius:0 0 10px 10px; }
+  #upcomingProductRows .product-row{ grid-template-columns: 1fr 1fr; }
+  #upcomingProductRows .product-row:last-child{ border-radius:0 0 10px 10px; }
   .product-row .pname{ font-size:12px; font-weight:600; color: var(--ink); }
   .product-row input{
     width:100%;
@@ -1069,14 +1088,51 @@
       <input type="text" class="field-input" id="upcomingBuyerName" list="upcomingBuyerList" placeholder="Type or pick a buyer" autocomplete="off">
       <datalist id="upcomingBuyerList"></datalist>
 
-      <div class="field-label">Bottles Qty</div>
-      <input type="number" class="field-input" id="upcomingBottles" min="1" step="1" placeholder="e.g. 50">
+      <div class="field-label">Products</div>
+      <div class="product-grid-head" style="grid-template-columns: 1fr 1fr;">
+        <div>Product</div><div>Qty</div>
+      </div>
+      <div id="upcomingProductRows"></div>
 
       <div class="modal-msg" id="upcomingMsgBox"></div>
 
       <div class="modal-btn-row">
         <button id="upcomingCancelBtn" type="button">Cancel</button>
         <button id="upcomingSaveBtn" type="button">Add to List</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="editSaleModalOverlay">
+    <div class="modal-sheet">
+      <div class="modal-title">Edit Sale</div>
+      <div class="modal-sub">Updates this row directly in your Sales sheet.</div>
+
+      <div class="field-label">Buyer Name</div>
+      <input type="text" class="field-input" id="editBuyerName" list="saleBuyerList" autocomplete="off">
+
+      <div class="field-label">Products</div>
+      <div class="product-grid-head">
+        <div>Product</div><div>Qty</div><div>Unit Price</div><div style="text-align:right">Amount</div>
+      </div>
+      <div id="editProductRows"></div>
+
+      <div class="field-label">Paid Amount (Rs.)</div>
+      <input type="number" class="field-input" id="editPaid" min="0" step="0.01">
+
+      <div class="field-label">Remark (optional)</div>
+      <input type="text" class="field-input" id="editRemark">
+
+      <div class="modal-summary">
+        <div><span>Total Amount</span><b id="editTotalDisplay">Rs. 0</b></div>
+        <div><span>Balance Due</span><b id="editBalanceDisplay">Rs. 0</b></div>
+      </div>
+
+      <div class="modal-msg" id="editMsgBox"></div>
+
+      <div class="modal-btn-row">
+        <button id="editCancelBtn" type="button">Cancel</button>
+        <button id="editSaveBtn" type="button">Save Changes</button>
       </div>
     </div>
   </div>
@@ -1239,16 +1295,37 @@
       : sortedSales.map(s => `
       <div class="sale-row ${s.status === 'paid' ? 'paid' : s.status === 'unpaid' ? 'unpaid' : ''}">
         <div>
-          <div class="sale-id">${s.id} · ${s.date ? new Date(s.date).toLocaleDateString('en-GB',{day:'2-digit',month:'short'}) : ''}</div>
+          <div class="sale-id">${s.date ? new Date(s.date).toLocaleDateString('en-GB',{day:'2-digit',month:'short'}) : ''}</div>
           <div class="sale-buyer">${s.buyerObj.name}</div>
           <div class="sale-detail">${itemsLine(s)}</div>
         </div>
         <div class="sale-amount">
           <div class="sale-total">${fmt(s.total)}</div>
           <span class="status-pill status-${s.status}">${statusLabel(s.status)}</span>
+          <div class="sale-actions">
+            <button class="sale-edit-btn" data-row="${s.rowIndex}" title="Edit">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+            </button>
+            <button class="sale-delete-btn" data-row="${s.rowIndex}" title="Delete">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+            </button>
+          </div>
         </div>
       </div>
     `).join('');
+
+    document.querySelectorAll('#saleList .sale-edit-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const sale = sortedSales.find(s => String(s.rowIndex) === btn.dataset.row);
+        if (sale) openEditSaleModal(sale);
+      });
+    });
+    document.querySelectorAll('#saleList .sale-delete-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const sale = sortedSales.find(s => String(s.rowIndex) === btn.dataset.row);
+        if (sale) deleteSaleRow(sale);
+      });
+    });
   }
 
   // ---- Buyer list with search filtering ----
@@ -1256,7 +1333,7 @@
     const query = (document.getElementById('buyerSearch').value || '').trim().toLowerCase();
     const filtered = ledger
       .filter(b => !query || b.name.toLowerCase().includes(query))
-      .sort((a,b)=>b.total-a.total);
+      .sort((a,b)=>b.bottles-a.bottles);
 
     document.getElementById('buyerCount').textContent = filtered.length;
     document.getElementById('buyerList').innerHTML = filtered.length === 0
@@ -1569,10 +1646,13 @@
       document.getElementById('saleBuyerName').value = prefill.buyerName || '';
       saleFromUpcomingId = prefill.upcomingId || null;
       document.getElementById('saleBuyerName').dispatchEvent(new Event('input'));
-      // put the planned quantity into the first product row as a starting point
-      const firstQtyInput = document.querySelector('#saleProductRows .saleQtyInput');
-      if (firstQtyInput && prefill.bottles) {
-        firstQtyInput.value = prefill.bottles;
+      // fill in the planned quantity for each matching product row
+      if (Array.isArray(prefill.items)) {
+        document.querySelectorAll('#saleProductRows .product-row').forEach(row => {
+          const name = row.querySelector('.pname').textContent;
+          const match = prefill.items.find(it => it.product === name);
+          if (match) row.querySelector('.saleQtyInput').value = match.qty;
+        });
         recalcSaleModal();
       }
     }
@@ -1820,6 +1900,10 @@
   let upcomingOrders = [];
   let upcomingIdCounter = 1;
 
+  function upcomingItemsLine(o){
+    return o.items.map(it => `${it.qty} ${it.product}`).join(' + ');
+  }
+
   function renderUpcomingOrders(){
     const listEl = document.getElementById('upcomingList');
     if (upcomingOrders.length === 0) {
@@ -1831,7 +1915,7 @@
         <div class="buyer-avatar">${initials(o.buyerName)}</div>
         <div class="buyer-info">
           <div class="buyer-name">${o.buyerName}</div>
-          <div class="buyer-meta">${o.bottles} bottles planned</div>
+          <div class="buyer-meta">${upcomingItemsLine(o)}</div>
         </div>
         <button class="upcoming-use-btn" data-id="${o.id}">Use</button>
         <button class="upcoming-remove-btn" data-id="${o.id}" title="Remove">
@@ -1844,7 +1928,7 @@
       btn.addEventListener('click', () => {
         const o = upcomingOrders.find(x => String(x.id) === btn.dataset.id);
         if (!o) return;
-        openSaleModal({ buyerName: o.buyerName, bottles: o.bottles, upcomingId: o.id });
+        openSaleModal({ buyerName: o.buyerName, items: o.items, upcomingId: o.id });
       });
     });
     listEl.querySelectorAll('.upcoming-remove-btn').forEach(btn => {
@@ -1862,6 +1946,17 @@
 
   const upcomingOverlay = document.getElementById('upcomingModalOverlay');
 
+  function renderUpcomingProductRows(){
+    const container = document.getElementById('upcomingProductRows');
+    const list = productPriceList.length ? productPriceList : SAMPLE_PRICE_LIST;
+    container.innerHTML = list.map((p, idx) => `
+      <div class="product-row">
+        <div class="pname">${p.name}</div>
+        <input type="number" min="0" step="1" placeholder="0" data-idx="${idx}" class="upcomingQtyInput">
+      </div>
+    `).join('');
+  }
+
   function openUpcomingModal(){
     const list = document.getElementById('upcomingBuyerList');
     list.innerHTML = '';
@@ -1871,7 +1966,7 @@
       list.appendChild(opt);
     });
     document.getElementById('upcomingBuyerName').value = '';
-    document.getElementById('upcomingBottles').value = '';
+    renderUpcomingProductRows();
     document.getElementById('upcomingMsgBox').className = 'modal-msg';
     document.getElementById('upcomingMsgBox').textContent = '';
     upcomingOverlay.classList.add('open');
@@ -1884,18 +1979,149 @@
 
   document.getElementById('upcomingSaveBtn').addEventListener('click', () => {
     const buyerName = document.getElementById('upcomingBuyerName').value.trim();
-    const bottles = document.getElementById('upcomingBottles').value;
     const msgBox = document.getElementById('upcomingMsgBox');
 
-    if (!buyerName) { msgBox.textContent = 'Please enter a buyer name.'; msgBox.className = 'modal-msg error'; return; }
-    if (!bottles || Number(bottles) <= 0) { msgBox.textContent = 'Please enter a valid bottle quantity.'; msgBox.className = 'modal-msg error'; return; }
+    const items = [];
+    document.querySelectorAll('#upcomingProductRows .product-row').forEach(row => {
+      const name = row.querySelector('.pname').textContent;
+      const qty = Number(row.querySelector('.upcomingQtyInput').value) || 0;
+      if (qty > 0) items.push({ product: name, qty });
+    });
 
-    upcomingOrders.push({ id: upcomingIdCounter++, buyerName, bottles: Number(bottles) });
+    if (!buyerName) { msgBox.textContent = 'Please enter a buyer name.'; msgBox.className = 'modal-msg error'; return; }
+    if (items.length === 0) { msgBox.textContent = 'Enter a quantity for at least one product.'; msgBox.className = 'modal-msg error'; return; }
+
+    upcomingOrders.push({ id: upcomingIdCounter++, buyerName, items });
     renderUpcomingOrders();
     closeUpcomingModal();
   });
 
   renderUpcomingOrders();
+
+  // ============================================================
+  //  EDIT / DELETE SALE — from the Sales tab
+  // ============================================================
+  let editTargetRowIndex = null;
+  const editOverlay = document.getElementById('editSaleModalOverlay');
+
+  function renderEditProductRows(existingItems){
+    const container = document.getElementById('editProductRows');
+    const list = productPriceList.length ? productPriceList : SAMPLE_PRICE_LIST;
+    container.innerHTML = list.map((p, idx) => {
+      const match = (existingItems || []).find(it => it.product === p.name);
+      const qty = match ? match.qty : 0;
+      const price = match ? match.price : (p.price || 0);
+      return `
+        <div class="product-row">
+          <div class="pname">${p.name}</div>
+          <input type="number" min="0" step="1" value="${qty || ''}" data-idx="${idx}" class="editQtyInput">
+          <input type="number" min="0" step="0.01" value="${price || 0}" data-idx="${idx}" class="editPriceInput">
+          <div class="pamt" id="editAmt-${idx}">Rs. 0</div>
+        </div>
+      `;
+    }).join('');
+    container.querySelectorAll('.editQtyInput, .editPriceInput').forEach(inp => {
+      inp.addEventListener('input', recalcEditModal);
+    });
+    recalcEditModal();
+  }
+
+  function recalcEditModal(){
+    let total = 0;
+    document.querySelectorAll('#editProductRows .product-row').forEach((row, idx) => {
+      const qty = parseFloat(row.querySelector('.editQtyInput').value) || 0;
+      const price = parseFloat(row.querySelector('.editPriceInput').value) || 0;
+      const amt = qty * price;
+      document.getElementById('editAmt-' + idx).textContent = fmtSaleModal(amt);
+      total += amt;
+    });
+    const paid = parseFloat(document.getElementById('editPaid').value) || 0;
+    document.getElementById('editTotalDisplay').textContent = fmtSaleModal(total);
+    document.getElementById('editBalanceDisplay').textContent = fmtSaleModal(total - paid);
+  }
+  document.getElementById('editPaid').addEventListener('input', recalcEditModal);
+
+  function showEditMsg(text, type){
+    const box = document.getElementById('editMsgBox');
+    box.textContent = text;
+    box.className = 'modal-msg ' + type;
+  }
+
+  function openEditSaleModal(sale){
+    editTargetRowIndex = sale.rowIndex;
+    document.getElementById('editBuyerName').value = sale.buyerObj.name;
+    document.getElementById('editPaid').value = sale.received || 0;
+    document.getElementById('editRemark').value = sale.remarks || '';
+    renderEditProductRows(sale.items);
+    document.getElementById('editMsgBox').className = 'modal-msg';
+    document.getElementById('editMsgBox').textContent = '';
+    const btn = document.getElementById('editSaveBtn');
+    btn.disabled = false;
+    btn.textContent = 'Save Changes';
+    editOverlay.classList.add('open');
+  }
+  function closeEditSaleModal(){ editOverlay.classList.remove('open'); }
+
+  document.getElementById('editCancelBtn').addEventListener('click', closeEditSaleModal);
+  editOverlay.addEventListener('click', (e) => { if (e.target === editOverlay) closeEditSaleModal(); });
+
+  document.getElementById('editSaveBtn').addEventListener('click', async () => {
+    const buyerName = document.getElementById('editBuyerName').value.trim();
+    if (!buyerName) { showEditMsg('Please enter a buyer name.', 'error'); return; }
+
+    const items = [];
+    document.querySelectorAll('#editProductRows .product-row').forEach(row => {
+      const name = row.querySelector('.pname').textContent;
+      const qty = Number(row.querySelector('.editQtyInput').value) || 0;
+      const price = Number(row.querySelector('.editPriceInput').value) || 0;
+      items.push({ product: name, qty, price });
+    });
+    if (!items.some(it => it.qty > 0)) { showEditMsg('Enter quantity for at least one product.', 'error'); return; }
+
+    const paid = document.getElementById('editPaid').value || 0;
+    const remark = document.getElementById('editRemark').value.trim();
+
+    const btn = document.getElementById('editSaveBtn');
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+
+    try {
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({
+          action: 'updateSale',
+          payload: { rowIndex: editTargetRowIndex, buyerName, items, paid, remark }
+        })
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || 'Could not update the sale.');
+
+      showEditMsg('Sale updated!', 'success');
+      await safeRefresh();
+      setTimeout(closeEditSaleModal, 1000);
+    } catch (err) {
+      btn.disabled = false;
+      btn.textContent = 'Save Changes';
+      showEditMsg(err.message || 'Something went wrong. Please try again.', 'error');
+    }
+  });
+
+  async function deleteSaleRow(sale){
+    if (!confirm('Delete this sale for ' + sale.buyerObj.name + '? This cannot be undone.')) return;
+    try {
+      const res = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'deleteSale', payload: { rowIndex: sale.rowIndex } })
+      });
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || 'Could not delete the sale.');
+      await safeRefresh();
+    } catch (err) {
+      alert(err.message || 'Something went wrong deleting the sale.');
+    }
+  }
 
   // ---- Tab switching ----
   document.querySelectorAll('.tab').forEach(tab => {
