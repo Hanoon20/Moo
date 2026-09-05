@@ -943,6 +943,9 @@
   <!-- ================= BUYER DETAIL MODAL ================= -->
   <div class="modal-overlay" id="buyerDetailOverlay">
     <div class="modal-sheet">
+      <button type="button" class="modal-close-x" id="buyerDetailCloseX" title="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
       <div class="modal-title" id="buyerDetailName">Buyer</div>
       <div class="modal-sub" id="buyerDetailMeta">Area · Type</div>
 
@@ -1384,6 +1387,9 @@
     document.getElementById('buyerDetailOverlay').classList.add('open');
   }
   document.getElementById('buyerDetailCloseBtn').addEventListener('click', () => {
+    document.getElementById('buyerDetailOverlay').classList.remove('open');
+  });
+  document.getElementById('buyerDetailCloseX').addEventListener('click', () => {
     document.getElementById('buyerDetailOverlay').classList.remove('open');
   });
   document.getElementById('buyerDetailOverlay').addEventListener('click', (e) => {
