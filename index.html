@@ -301,23 +301,8 @@
     color: var(--bottle-green);
     white-space:nowrap;
   }
-  .sale-actions{
-    display:flex;
-    gap:6px;
-    margin-top:6px;
-    justify-content:flex-end;
-  }
-  .sale-edit-btn, .sale-delete-btn{
-    width:26px; height:26px;
-    border-radius:8px;
-    border:1px solid var(--line);
-    background: var(--cream);
-    display:flex; align-items:center; justify-content:center;
-    cursor:pointer;
-  }
-  .sale-edit-btn{ color: var(--brass); }
-  .sale-delete-btn{ color: var(--rust); }
-  .sale-edit-btn svg, .sale-delete-btn svg{ width:13px; height:13px; }
+  .sale-row-clickable{ cursor:pointer; transition: transform .12s ease; }
+  .sale-row-clickable:active{ transform: scale(0.98); }
 
   .footnote{
     margin: 22px 22px 8px;
@@ -975,6 +960,35 @@
     </div>
   </div>
 
+  <div class="modal-overlay" id="saleDetailOverlay">
+    <div class="modal-sheet">
+      <div class="modal-title" id="saleDetailBuyer">Buyer</div>
+      <div class="modal-sub" id="saleDetailDate">Date</div>
+
+      <div class="section-head" style="margin:14px 0 8px; padding:0;">
+        <div class="section-title" style="font-size:15px;">Products</div>
+      </div>
+      <div id="saleDetailProducts"></div>
+
+      <div class="modal-summary" style="margin-top:14px;">
+        <div><span>Total Amount</span><b id="saleDetailTotal">Rs. 0</b></div>
+        <div><span>Balance Due</span><b id="saleDetailBalance">Rs. 0</b></div>
+      </div>
+
+      <div class="date-note" style="margin-top:12px;">
+        Paid Amount: <b id="saleDetailPaid">Rs. 0</b> ·
+        Status: <span class="status-pill" id="saleDetailStatusPill">—</span>
+      </div>
+      <div class="date-note" id="saleDetailRemarkLine" style="margin-top:8px; display:none;"></div>
+
+      <div class="modal-btn-row">
+        <button id="saleDetailEditBtn" type="button" style="background:var(--brass);color:#fff;">Edit</button>
+        <button id="saleDetailDeleteBtn" type="button" style="background:var(--rust);color:#fff;">Delete</button>
+      </div>
+      <button id="saleDetailCloseBtn" type="button" style="width:100%;margin-top:10px;padding:13px;border-radius:11px;border:1.5px solid var(--line);background:var(--cream-card);color:var(--ink-soft);font-weight:600;font-size:13.5px;cursor:pointer;font-family:'Work Sans', sans-serif;">Close</button>
+    </div>
+  </div>
+
 
   <button class="fab" id="fabNewSale" title="New Sale">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
@@ -1246,7 +1260,7 @@
     document.getElementById('saleList').innerHTML = sortedSales.length === 0
       ? '<div class="empty-state">No sales logged yet.</div>'
       : sortedSales.map(s => `
-      <div class="sale-row ${s.status === 'paid' ? 'paid' : s.status === 'unpaid' ? 'unpaid' : ''}">
+      <div class="sale-row sale-row-clickable ${s.status === 'paid' ? 'paid' : s.status === 'unpaid' ? 'unpaid' : ''}" data-row="${s.rowIndex}">
         <div>
           <div class="sale-id">${s.date ? new Date(s.date).toLocaleDateString('en-GB',{day:'2-digit',month:'short'}) : ''}</div>
           <div class="sale-buyer">${s.buyerObj.name}</div>
@@ -1255,28 +1269,14 @@
         <div class="sale-amount">
           <div class="sale-total">${fmt(s.total)}</div>
           <span class="status-pill status-${s.status}">${statusLabel(s.status)}</span>
-          <div class="sale-actions">
-            <button class="sale-edit-btn" data-row="${s.rowIndex}" title="Edit">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
-            </button>
-            <button class="sale-delete-btn" data-row="${s.rowIndex}" title="Delete">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
-            </button>
-          </div>
         </div>
       </div>
     `).join('');
 
-    document.querySelectorAll('#saleList .sale-edit-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const sale = sortedSales.find(s => String(s.rowIndex) === btn.dataset.row);
-        if (sale) openEditSaleModal(sale);
-      });
-    });
-    document.querySelectorAll('#saleList .sale-delete-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const sale = sortedSales.find(s => String(s.rowIndex) === btn.dataset.row);
-        if (sale) deleteSaleRow(sale);
+    document.querySelectorAll('#saleList .sale-row-clickable').forEach(row => {
+      row.addEventListener('click', () => {
+        const sale = sortedSales.find(s => String(s.rowIndex) === row.dataset.row);
+        if (sale) openSaleDetailModal(sale);
       });
     });
   }
@@ -1981,10 +1981,73 @@
       const data = await res.json();
       if (!data.success) throw new Error(data.error || 'Could not delete the sale.');
       await safeRefresh();
+      document.getElementById('saleDetailOverlay').classList.remove('open');
     } catch (err) {
       alert(err.message || 'Something went wrong deleting the sale.');
     }
   }
+
+  // ============================================================
+  //  SALE DETAIL POPUP — tap a sale in the list to see everything
+  //  (products, qty, amount, paid/not paid, date, buyer), with
+  //  Edit and Delete tucked inside this popup.
+  // ============================================================
+  const saleDetailOverlay = document.getElementById('saleDetailOverlay');
+  let saleDetailCurrent = null;
+
+  function openSaleDetailModal(sale){
+    saleDetailCurrent = sale;
+    document.getElementById('saleDetailBuyer').textContent = sale.buyerObj.name;
+    document.getElementById('saleDetailDate').textContent = sale.date
+      ? new Date(sale.date).toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric' })
+      : '—';
+
+    document.getElementById('saleDetailProducts').innerHTML = (sale.items || []).length === 0
+      ? '<div class="empty-state">No products recorded.</div>'
+      : sale.items.map(it => `
+        <div class="sale-row">
+          <div>
+            <div class="sale-buyer">${it.product}</div>
+            <div class="sale-detail">${it.qty} x Rs. ${Number(it.price).toLocaleString('en-IN')}</div>
+          </div>
+          <div class="sale-amount">
+            <div class="sale-total">${fmt(it.qty * it.price)}</div>
+          </div>
+        </div>
+      `).join('');
+
+    document.getElementById('saleDetailTotal').textContent = fmt(sale.total);
+    document.getElementById('saleDetailBalance').textContent = fmt(sale.balance);
+    document.getElementById('saleDetailPaid').textContent = fmt(sale.received);
+
+    const pill = document.getElementById('saleDetailStatusPill');
+    pill.textContent = statusLabel(sale.status);
+    pill.className = 'status-pill status-' + sale.status;
+
+    const remarkLine = document.getElementById('saleDetailRemarkLine');
+    if (sale.remarks) {
+      remarkLine.textContent = 'Remark: ' + sale.remarks;
+      remarkLine.style.display = 'block';
+    } else {
+      remarkLine.style.display = 'none';
+    }
+
+    saleDetailOverlay.classList.add('open');
+  }
+  function closeSaleDetailModal(){ saleDetailOverlay.classList.remove('open'); }
+
+  document.getElementById('saleDetailCloseBtn').addEventListener('click', closeSaleDetailModal);
+  saleDetailOverlay.addEventListener('click', (e) => { if (e.target === saleDetailOverlay) closeSaleDetailModal(); });
+
+  document.getElementById('saleDetailEditBtn').addEventListener('click', () => {
+    if (!saleDetailCurrent) return;
+    closeSaleDetailModal();
+    openEditSaleModal(saleDetailCurrent);
+  });
+  document.getElementById('saleDetailDeleteBtn').addEventListener('click', () => {
+    if (!saleDetailCurrent) return;
+    deleteSaleRow(saleDetailCurrent);
+  });
 
   // ---- Tab switching ----
   document.querySelectorAll('.tab').forEach(tab => {
