@@ -579,7 +579,21 @@
     max-height: 88vh;
     overflow-y:auto;
     animation: slideUp .3s ease;
+    position:relative;
   }
+  .modal-close-x{
+    position:absolute;
+    top:16px; right:16px;
+    width:30px; height:30px;
+    border-radius:9px;
+    border:1px solid var(--line);
+    background: var(--cream-card);
+    color: var(--ink-soft);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    z-index:2;
+  }
+  .modal-close-x svg{ width:14px; height:14px; }
   @keyframes slideUp{ from{ transform:translateY(30px); opacity:0; } to{ transform:translateY(0); opacity:1; } }
   .modal-title{
     font-family:'Fraunces', serif;
@@ -962,6 +976,9 @@
 
   <div class="modal-overlay" id="saleDetailOverlay">
     <div class="modal-sheet">
+      <button type="button" class="modal-close-x" id="saleDetailCloseX" title="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
       <div class="modal-title" id="saleDetailBuyer">Buyer</div>
       <div class="modal-sub" id="saleDetailDate">Date</div>
 
@@ -996,6 +1013,9 @@
 
   <div class="modal-overlay" id="saleModalOverlay">
     <div class="modal-sheet">
+      <button type="button" class="modal-close-x" id="saleModalCloseX" title="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
       <div class="modal-title">🐐 New Sale</div>
       <div class="modal-sub">Creates a row in your Sales sheet instantly.</div>
 
@@ -1043,6 +1063,9 @@
 
   <div class="modal-overlay" id="payModalOverlay">
     <div class="modal-sheet">
+      <button type="button" class="modal-close-x" id="payModalCloseX" title="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
       <div class="modal-title">💰 Record Payment</div>
       <div class="modal-sub" id="payBuyerLine">Buyer</div>
 
@@ -1462,6 +1485,7 @@
   function closePayModal(){ payOverlay.classList.remove('open'); }
 
   document.getElementById('payCancelBtn').addEventListener('click', closePayModal);
+  document.getElementById('payModalCloseX').addEventListener('click', closePayModal);
   payOverlay.addEventListener('click', (e) => { if (e.target === payOverlay) closePayModal(); });
 
   function showPayMsg(text, type){
@@ -1661,6 +1685,7 @@
     this.dataset.userEdited = 'true';
   });
   document.getElementById('saleCancelBtn').addEventListener('click', closeSaleModal);
+  document.getElementById('saleModalCloseX').addEventListener('click', closeSaleModal);
   overlay.addEventListener('click', (e) => { if (e.target === overlay) closeSaleModal(); });
 
   function renderSaleProductRows(){
@@ -2036,6 +2061,7 @@
   function closeSaleDetailModal(){ saleDetailOverlay.classList.remove('open'); }
 
   document.getElementById('saleDetailCloseBtn').addEventListener('click', closeSaleDetailModal);
+  document.getElementById('saleDetailCloseX').addEventListener('click', closeSaleDetailModal);
   saleDetailOverlay.addEventListener('click', (e) => { if (e.target === saleDetailOverlay) closeSaleDetailModal(); });
 
   document.getElementById('saleDetailEditBtn').addEventListener('click', () => {
