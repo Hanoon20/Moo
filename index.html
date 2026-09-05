@@ -1273,10 +1273,9 @@
       </div>
     `).join('');
 
-    document.querySelectorAll('#saleList .sale-row-clickable').forEach(row => {
+    document.querySelectorAll('#saleList .sale-row-clickable').forEach((row, i) => {
       row.addEventListener('click', () => {
-        const sale = sortedSales.find(s => String(s.rowIndex) === row.dataset.row);
-        if (sale) openSaleDetailModal(sale);
+        openSaleDetailModal(sortedSales[i]);
       });
     });
   }
